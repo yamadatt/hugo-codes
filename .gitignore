@@ -1,7 +1,34 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
 .obsidian*
-node_modules/
+
+# Hugo
 public/
 resources/
-.DS_Store
 .hugo_build.lock
 hugo_stats.json
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Netlify
+.netlify/
+
+# Local env files
+.env
+.env.local
+.env.*.local
