@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "node -v && npm -v && hugo version && hugo"
   publish = "public"
 
 [build.environment]
