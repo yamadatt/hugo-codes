@@ -2,6 +2,9 @@
 
 Goの実装、設計、運用を扱うHugo製の技術ブログです。
 
+- **Webサイト**: [https://hugo-codes.netlify.app/](https://hugo-codes.netlify.app/)
+
+
 ## 使い方
 
 ```sh
