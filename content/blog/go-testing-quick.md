@@ -3,7 +3,7 @@ title: Goの <span>testing</span> パッケージの知られざる便利機能
 title_safe: Goのtestingパッケージの知られざる便利機能
 highlight: blue
 pack: duotone
-icon: vial
+icon: circle-check
 draft: false
 toc: true
 comments: false

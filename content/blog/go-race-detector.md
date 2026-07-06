@@ -3,7 +3,7 @@ title: データレースを防ぐ <span>race detector</span> の仕組みと活
 title_safe: データレースを防ぐrace detectorの仕組みと活用
 highlight: emerald
 pack: duotone
-icon: shield-halved
+icon: stethoscope
 draft: false
 toc: true
 comments: false

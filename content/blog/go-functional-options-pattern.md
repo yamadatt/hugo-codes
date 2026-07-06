@@ -3,7 +3,7 @@ title: <span>Functional Options</span> パターンによる柔軟な構造体�
 title_safe: Functional Optionsパターンによる柔軟な構造体生成
 highlight: lime
 pack: duotone
-icon: sliders
+icon: sliders-horizontal
 draft: false
 toc: true
 comments: false

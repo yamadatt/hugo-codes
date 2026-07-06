@@ -3,7 +3,7 @@ title: 構造体の <span>Alignment</span> とメモリパディング最適化
 title_safe: 構造体のAlignmentとメモリパディング最適化
 highlight: amber
 pack: duotone
-icon: table-cells
+icon: brackets-curly
 draft: false
 toc: true
 comments: false

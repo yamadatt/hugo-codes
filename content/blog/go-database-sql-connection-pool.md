@@ -3,7 +3,7 @@ title: <span>database/sql</span> 接続プールの適切なチューニング
 title_safe: database/sql接続プールの適切なチューニング
 highlight: fuchsia
 pack: duotone
-icon: database
+icon: stack
 draft: false
 toc: true
 comments: false

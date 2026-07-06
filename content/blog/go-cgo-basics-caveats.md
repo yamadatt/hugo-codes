@@ -3,7 +3,7 @@ title: <span>Cgo</span> の基本と呼び出しオーバーヘッドの理解
 title_safe: Cgoの基本と呼び出しオーバーヘッドの理解
 highlight: slate
 pack: duotone
-icon: low-vision
+icon: code-branch
 draft: false
 toc: true
 comments: false

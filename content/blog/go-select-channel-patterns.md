@@ -3,7 +3,7 @@ title: Goの <span>select</span> 文とチャネルの制御パターン
 title_safe: Goのselect文とチャネルの制御パターン
 highlight: purple
 pack: duotone
-icon: network-wired
+icon: broadcast
 draft: false
 toc: true
 comments: false

@@ -3,7 +3,7 @@ title: Goで始める <span>WebAssembly (WASM)</span> と WASI の基本
 title_safe: Goで始めるWebAssembly (WASM) と WASI の基本
 highlight: sky
 pack: duotone
-icon: window-restore
+icon: globe
 draft: false
 toc: true
 comments: false

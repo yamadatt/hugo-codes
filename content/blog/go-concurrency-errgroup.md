@@ -3,7 +3,7 @@ title: <span>errgroup</span> パッケージによる並行処理の同期とエ
 title_safe: errgroupパッケージによる並行処理の同期とエラーハンドリング
 highlight: violet
 pack: duotone
-icon: object-group
+icon: code-fork
 draft: false
 toc: true
 comments: false
