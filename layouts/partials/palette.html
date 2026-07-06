@@ -1,0 +1,221 @@
+{{- /*
+  ⌘K search palette. Fuse.js (vendored, assets/js) searching the
+  build-time JSON index (layouts/_default/home.searchindex.json); the
+  main menu serves as the default command list before a query is typed.
+  Nothing loads until the first open.
+  */
+-}}
+{{- $fuse := resources.Get "js/fuse.basic.min.mjs" | fingerprint -}}
+<div data-palette>
+  <div
+    class="palette-backdrop fixed inset-0 z-1250 bg-slate-900/40 backdrop-blur-xs"
+    data-palette-backdrop
+    aria-hidden="true"
+  ></div>
+
+  <div
+    id="site-palette"
+    class="palette-panel fixed top-24 left-1/2 z-1300 w-160 max-w-[calc(100vw-2rem)] rounded-xl border bg-white shadow-xl"
+    data-palette-panel
+    role="dialog"
+    aria-label="Site search"
+  >
+    <input
+      class="w-full border-b bg-transparent px-4 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none"
+      data-palette-input
+      type="text"
+      placeholder="Search posts, bits and pages ..."
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search"
+    />
+    <ul class="m-0 max-h-80 list-none overflow-y-auto p-2" data-palette-results>
+      {{ range site.Menus.main }}
+        <li>
+          <a
+            href="{{ .URL }}"
+            class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-50"
+          >
+            {{ with .Params.icon }}
+              {{ partial "icon.html" (dict "icon" . "class" "shrink-0 text-lg text-slate-400") }}
+            {{ end }}
+            <span class="flex-1 truncate">{{ .Name }}</span>
+            <span
+              class="shrink-0 text-xs tracking-wider text-slate-300 uppercase"
+              >page</span
+            >
+          </a>
+        </li>
+      {{ end }}
+    </ul>
+    <p class="m-0 border-t px-4 py-2 text-xs text-slate-400">
+      ↑↓ navigate · ↵ open · esc close
+    </p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var wrap = document.querySelector("[data-palette]");
+    if (!wrap) return;
+
+    var root = document.documentElement;
+    var backdrop = wrap.querySelector("[data-palette-backdrop]");
+    var panel = wrap.querySelector("[data-palette-panel]");
+    var input = wrap.querySelector("[data-palette-input]");
+    var list = wrap.querySelector("[data-palette-results]");
+    var defaultHTML = list.innerHTML;
+    var fuse = null;
+    var loading = null;
+    var selected = 0;
+
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    {{/* Fetch the engine and the index once, on first open. */}}
+    function load() {
+      if (!loading) {
+        loading = Promise.all([
+          import("{{ $fuse.RelPermalink }}"),
+          fetch("{{ (site.Home.OutputFormats.Get "SearchIndex").RelPermalink }}").then(
+            function (r) { return r.json(); },
+          ),
+        ]).then(function (parts) {
+          fuse = new parts[0].default(parts[1], {
+            keys: [
+              { name: "title", weight: 2 },
+              { name: "tags", weight: 1.5 },
+              { name: "body", weight: 1 },
+            ],
+            threshold: 0.35,
+            ignoreLocation: true,
+          });
+        });
+      }
+      return loading;
+    }
+
+    function rows() {
+      return list.querySelectorAll("a");
+    }
+
+    function select(i) {
+      var all = rows();
+      if (!all.length) return;
+      selected = (i + all.length) % all.length;
+      all.forEach(function (a, n) {
+        a.classList.toggle("is-selected", n === selected);
+      });
+      all[selected].scrollIntoView({ block: "nearest" });
+    }
+
+    function render(results) {
+      if (!results) {
+        list.innerHTML = defaultHTML;
+        select(0);
+        return;
+      }
+      if (!results.length) {
+        list.innerHTML =
+          '<li class="px-3 py-6 text-center text-sm text-slate-400">Nothing found. The net remembers differently.</li>';
+        return;
+      }
+      list.innerHTML = results
+        .map(function (r) {
+          var d = r.item;
+          return (
+            '<li><a href="' + esc(d.url) +
+            '" class="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-50">' +
+            '<span class="icon shrink-0 text-lg text-slate-400">' + d.icon + "</span>" +
+            '<span class="flex-1 truncate">' + esc(d.title) + "</span>" +
+            '<span class="shrink-0 text-xs tracking-wider text-slate-300 uppercase">' + esc(d.kind) + "</span>" +
+            "</a></li>"
+          );
+        })
+        .join("");
+      select(0);
+    }
+
+    function isOpen() {
+      return panel.classList.contains("is-open");
+    }
+
+    function open() {
+      panel.classList.add("is-open");
+      backdrop.classList.add("is-open");
+      root.style.overflow = "hidden";
+      input.value = "";
+      render(null);
+      load();
+      {{/* Focus immediately, then again once the panel has painted -
+          some browsers refuse the same-tick focus while the element is
+          still visibility:hidden. */}}
+      input.focus({ preventScroll: true });
+      requestAnimationFrame(function () {
+        input.focus({ preventScroll: true });
+        input.select();
+      });
+    }
+
+    function close() {
+      panel.classList.remove("is-open");
+      backdrop.classList.remove("is-open");
+      root.style.overflow = "";
+    }
+
+    input.addEventListener("input", function () {
+      var q = input.value.trim();
+      if (!q) {
+        render(null);
+        return;
+      }
+      load().then(function () {
+        {{/* Only render if the query hasn't moved on while we loaded. */}}
+        if (input.value.trim() === q) render(fuse.search(q, { limit: 8 }));
+      });
+    });
+
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        select(selected + 1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        select(selected - 1);
+      } else if (e.key === "Enter") {
+        var all = rows();
+        if (all[selected]) {
+          e.preventDefault();
+          all[selected].click();
+        }
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        isOpen() ? close() : open();
+        return;
+      }
+      if (e.key === "Escape" && isOpen()) close();
+    });
+
+    {{/* Any [data-palette-open] on the page (e.g. the drawer's search
+        box) summons the palette. */}}
+    document.addEventListener("click", function (e) {
+      if (e.target.closest("[data-palette-open]")) open();
+    });
+
+    {{/* The key-combo hint follows the visitor's platform. */}}
+    if (!/Mac|iP/.test(navigator.platform)) {
+      document.querySelectorAll("[data-palette-kbd]").forEach(function (k) {
+        k.textContent = "Ctrl K";
+      });
+    }
+
+    backdrop.addEventListener("click", close);
+  })();
+</script>

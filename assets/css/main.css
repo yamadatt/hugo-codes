@@ -1,0 +1,1380 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@source "hugo_stats.json";
+
+@source inline("{text,bg,border-b,border}-{purple,blue,green,emerald,indigo,pink,orange,rose,red,yellow,slate}-{50,100,200,300,400,500,600,700,800}");
+
+@custom-variant prose-inline-code (&.prose-xl :where(:not(pre) > code):not(:where([class~="not-prose"] *)));
+
+/*  Class-based dark mode; see theme switcher button below.  */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
+  /*
+  Background/foreground framing: the body sits behind the content card
+  as a muted backdrop. Dark mode overrides this below (html.dark) so the
+  backdrop stays darker than the card instead of inheriting the remapped
+  slate scale, which would invert the depth.
+  */
+  :root {
+    --color-backdrop: var(--color-slate-100);
+  }
+
+  /* The page (and drawer nav) still scroll; the scrollbars just don't
+     get to loiter over the backdrop. */
+  html,
+  #navigation {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  #navigation::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.woff2") format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rubik";
+  src: url("/fonts/Rubik.woff2") format("woff2");
+  font-display: swap;
+}
+
+@layer base {
+  ul,
+  ol {
+    list-style: revert;
+  }
+
+  body {
+    font-family:
+      "Inter",
+      Helvetica Neue,
+      Helvetica,
+      Arial,
+      sans-serif;
+    /* The muted backdrop behind the content card; see --color-backdrop. */
+    background-color: var(--color-backdrop);
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Rubik",
+      Helvetica Neue,
+      Helvetica,
+      Arial,
+      sans-serif;
+  }
+}
+
+.divider {
+  position: relative;
+}
+
+.divider::after {
+  position: absolute;
+  content: "";
+  z-index: -1;
+  left: 0;
+  bottom: 45%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-blue-50);
+}
+
+/* Changelog */
+#changelog .event a {
+  color: var(--color-slate-500);
+  border-bottom: 1px dotted var(--color-slate-500);
+}
+
+#changelog .event a:hover {
+  color: var(--color-slate-600);
+  border-bottom: 1px dotted var(--color-slate-600);
+}
+
+#changelog .event code {
+  @apply rounded-md border border-slate-200 bg-slate-50 p-0.5 text-xs text-slate-500 sm:p-1 sm:text-sm;
+}
+
+/* Primary Navigation (drawer) */
+#navigation li {
+  --nav-bar-active: var(--color-blue-400);
+  --nav-bar-hover: var(--color-blue-100);
+}
+
+/* Per-section nav highlight colors, matching each section's activity graph. */
+#navigation li.highlight-rose {
+  --nav-bar-active: var(--color-rose-300);
+  --nav-bar-hover: var(--color-rose-100);
+}
+
+#navigation li.highlight-purple {
+  --nav-bar-active: var(--color-purple-300);
+  --nav-bar-hover: var(--color-purple-100);
+}
+
+#navigation li.highlight-emerald {
+  --nav-bar-active: var(--color-emerald-300);
+  --nav-bar-hover: var(--color-emerald-100);
+}
+
+#navigation li.highlight-orange {
+  --nav-bar-active: var(--color-orange-300);
+  --nav-bar-hover: var(--color-orange-100);
+}
+
+#navigation li.highlight-yellow {
+  --nav-bar-active: var(--color-yellow-300);
+  --nav-bar-hover: var(--color-yellow-100);
+}
+
+/* The signature skewed underline, now living under each item's label.
+   The label isolates its own stacking context so the z:-1 bar paints
+   above the row's hover background rather than hiding behind it. */
+#navigation .label {
+  isolation: isolate;
+}
+
+#navigation .label::after {
+  transition: all 0.2s ease;
+  position: absolute;
+  content: "";
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 12%;
+  transform: rotate(1.5deg);
+}
+
+#navigation a.active .label::after {
+  background-color: var(--nav-bar-active);
+}
+
+#navigation a:hover .label::after {
+  background-color: var(--nav-bar-hover);
+}
+
+/* Drawer open/close: panel slides, backdrop fades. The ⌘K palette
+   shares the backdrop treatment and adds a small settle on its panel. */
+.drawer-backdrop,
+.palette-backdrop {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s ease;
+}
+
+.drawer-backdrop.is-open,
+.palette-backdrop.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer-panel {
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition:
+    transform 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.drawer-panel.is-open {
+  transform: none;
+  visibility: visible;
+}
+
+/* Visibility flips instantly on open (so the input can be focused in
+   the same tick) and only after the fade on close. */
+.palette-panel {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -0.5rem);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+
+.palette-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+
+/* Keyboard selection mirrors the hover treatment. */
+.palette-panel a.is-selected {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel,
+  .drawer-backdrop,
+  .palette-panel,
+  .palette-backdrop {
+    transition: none;
+  }
+}
+
+/*
+Docked drawer: on large screens the panel is always open as part of the
+muted backdrop - no border, no shadow, no overlay, no toggle - and the
+content card shifts right to make room. Pure CSS; the trigger button and
+overlay behaviour only exist below lg.
+*/
+@media (min-width: 64rem) {
+  body {
+    padding-left: 19rem;
+    padding-right: 1rem;
+  }
+
+  .drawer-panel {
+    transform: none;
+    visibility: visible;
+    transition: none;
+    z-index: 100;
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    padding-top: 2.5rem;
+  }
+
+  .drawer-header {
+    border-color: transparent;
+    padding-top: 0;
+  }
+
+  [data-drawer-close],
+  .drawer-backdrop {
+    display: none;
+  }
+
+  /* Hover lifts items to the card colour, matching the foreground. */
+  #navigation a:hover {
+    background-color: var(--color-white);
+  }
+
+  /* Centre the palette over the content area (19rem drawer gutter on
+     the left, 1rem on the right), not the raw viewport. The ultrawide
+     cap adds symmetric padding, so this holds there too. */
+  .palette-panel {
+    left: calc(50vw + 9rem);
+  }
+}
+
+/*
+On very wide screens the composition (19rem drawer gutter + 72rem card +
+1rem breathing room = 92rem) stops growing and centers as a unit, so the
+drawer travels with the card instead of clinging to the viewport edge
+while the card drifts off to the right.
+*/
+@media (min-width: 92rem) {
+  body {
+    padding-left: calc((100vw - 92rem) / 2 + 19rem);
+    padding-right: calc((100vw - 92rem) / 2 + 1rem);
+  }
+
+  .drawer-panel {
+    left: calc((100vw - 92rem) / 2);
+  }
+}
+
+/* Table of Contents */
+.toc ul,
+ol {
+  margin-left: 16px;
+}
+
+.toc a {
+  color: var(--color-slate-700) !important;
+  border-bottom: 2px solid var(--color-slate-200) !important;
+  padding-bottom: 1px !important;
+}
+
+.toc a:hover {
+  border-bottom: 2px solid var(--color-slate-300) !important;
+}
+
+.toc ol {
+  margin-top: 6px;
+}
+
+.toc li {
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.prose,
+.blurb-prose
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)):before,
+.prose,
+.blurb-prose
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)):after,
+.prose-xl,
+.blurb-prose
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)):before,
+.prose-xl,
+.blurb-prose
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)):after {
+  content: "`";
+}
+
+.article-prose {
+  @apply mx-auto mb-8 max-w-4xl wrap-break-word;
+  @apply prose-headings:mt-10 prose-headings:mb-3 md:prose-headings:mt-12 md:prose-headings:mb-4 lg:prose-headings:mt-14;
+  @apply prose-h2:text-2xl prose-h2:leading-tight prose-h2:font-bold prose-h2:text-slate-800 md:prose-h2:text-3xl;
+  @apply prose-h3:text-xl prose-h3:leading-snug prose-h3:font-semibold prose-h3:text-slate-700 md:prose-h3:text-2xl;
+  @apply prose-h4:text-lg prose-h4:leading-snug prose-h4:font-semibold prose-h4:text-slate-700 md:prose-h4:text-xl;
+  @apply prose-h5:text-base prose-h5:font-semibold prose-h5:text-slate-700 md:prose-h5:text-lg;
+  @apply prose-blockquote:border-l-4 prose-blockquote:border-slate-200 prose-blockquote:pl-4 prose-blockquote:font-light prose-blockquote:text-slate-500 prose-blockquote:italic;
+  @apply prose-pre:overflow-x-auto prose-pre:text-sm;
+  @apply prose-table:block prose-table:w-full prose-table:overflow-x-auto prose-table:border md:prose-table:table;
+  @apply prose-thead:bg-slate-50 prose-tr:border-b prose-th:p-2 prose-td:p-2;
+  @apply prose-img:m-auto prose-img:rounded-lg prose-img:border prose-img:bg-slate-100 prose-img:p-2;
+  @apply prose-hr:my-9 md:prose-hr:my-18;
+  @apply prose-inline-code:rounded-sm prose-inline-code:bg-gray-100 prose-inline-code:p-1 prose-inline-code:font-medium prose-inline-code:text-black;
+}
+
+/* Flowing text holds a ~65ch measure, centered; code, images and tables keep the full width. */
+.article-prose :where(p, ul, ol, blockquote, h2, h3, h4, h5, h6) {
+  @apply mx-auto max-w-184;
+}
+
+/* Body copy: 16px on small screens, 18px from md up, with relaxed leading for long-form reading. */
+.article-prose :where(p, li) {
+  @apply text-base leading-relaxed text-slate-800 md:text-lg md:leading-[1.7];
+}
+
+/* Blurb bit prose stylings */
+.blurb-prose {
+  @apply text-sm leading-relaxed font-normal text-slate-700;
+}
+
+.blurb-prose :where(p, ul, ol, blockquote, pre, h2, h3, h4, .highlight) {
+  @apply my-0;
+}
+
+.blurb-prose
+  :where(p, ul, ol, blockquote, pre, h2, h3, h4, .highlight):not(:first-child) {
+  @apply mt-3;
+}
+
+.blurb-prose :where(a) {
+  @apply border-b border-slate-300 font-medium text-slate-700 hover:border-slate-500;
+}
+
+.blurb-prose :where(strong) {
+  @apply font-semibold text-slate-800;
+}
+
+.blurb-prose :where(ul) {
+  @apply list-disc pl-5;
+}
+
+.blurb-prose :where(ol) {
+  @apply list-decimal pl-5;
+}
+
+.blurb-prose :where(:not(pre) > code) {
+  @apply rounded-sm bg-gray-100 px-1 py-0.5 text-sm font-medium text-slate-800;
+}
+
+.blurb-prose :where(blockquote) {
+  @apply border-l-4 border-slate-200 py-1 pl-4 font-light text-slate-500 italic;
+}
+
+.blurb-prose :where(h2, h3, h4) {
+  @apply font-semibold text-slate-800;
+}
+
+/* Heading Anchors */
+.article-prose :where(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+  scroll-margin-top: 2rem;
+}
+
+.heading-link {
+  display: block;
+  color: inherit !important;
+  font-weight: inherit !important;
+  text-decoration: none !important;
+  border-bottom: none !important;
+}
+
+.heading-anchor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1em;
+  display: inline-flex;
+  align-items: center;
+  width: 1.4em;
+  padding-right: 0.4em;
+  color: var(--color-slate-300);
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
+}
+
+.heading-anchor svg {
+  width: 0.65em;
+  height: 0.65em;
+}
+
+.article-prose :where(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+.heading-link:focus .heading-anchor {
+  opacity: 1;
+}
+
+.heading-anchor:hover {
+  color: var(--color-slate-500);
+}
+
+/* The activity-graph reveal overlay is opt-in via the motion-safe rules below;
+   by default it stays hidden so the real graph shows immediately. */
+.act-fx {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .activity-graph .act-fx {
+    display: block;
+    background-color: var(--act-base);
+    animation: fx-wipe 0.35s ease-out var(--d, 0ms) forwards;
+  }
+
+  @keyframes fx-wipe {
+    0% {
+      background-color: var(--act-flash);
+      transform: scale(1.15);
+      opacity: 1;
+    }
+    60% {
+      background-color: var(--act-flash);
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    100% {
+      background-color: var(--act-base);
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+}
+
+.blog a {
+  text-decoration: none;
+}
+
+/* Chroma code blocks */
+.highlight pre {
+  @apply overflow-x-auto rounded-md p-3 text-sm;
+}
+
+.highlight code::after,
+.highlight code::before {
+  content: "";
+}
+
+.credit svg {
+  color: var(--color-white) !important;
+  background-color: transparent !important;
+}
+
+/* Inlined icons */
+.icon > svg {
+  display: inline-block;
+  vertical-align: -0.125em;
+}
+
+/* Progress Bar */
+[data-progress-bar] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background-color: transparent;
+  opacity: 0.85;
+  z-index: 1100;
+}
+
+[data-progress-bar]::-webkit-progress-bar {
+  background: transparent;
+}
+
+[data-progress-bar]::-moz-progress-bar {
+  background: var(--color-slate-800);
+}
+
+[data-progress-bar]::-webkit-progress-value {
+  background: var(--color-slate-800);
+}
+
+progress.highlight-slate::-moz-progress-bar {
+  background-color: var(--color-slate-400);
+}
+
+progress.highlight-red::-moz-progress-bar {
+  background-color: var(--color-red-400);
+}
+
+progress.highlight-yellow::-moz-progress-bar {
+  background-color: var(--color-yellow-400);
+}
+
+progress.highlight-orange::-moz-progress-bar {
+  background-color: var(--color-orange-400);
+}
+
+progress.highlight-emerald::-moz-progress-bar {
+  background-color: var(--color-emerald-500);
+}
+
+progress.highlight-teal::-moz-progress-bar {
+  background-color: var(--color-teal-400);
+}
+
+progress.highlight-blue::-moz-progress-bar {
+  background-color: var(--color-blue-400);
+}
+
+progress.highlight-purple::-moz-progress-bar {
+  background-color: var(--color-purple-400);
+}
+
+progress.highlight-rose::-moz-progress-bar {
+  background-color: var(--color-rose-400);
+}
+
+/* Article Highlights */
+.highlight-slate .summary span,
+.highlight-slate h3 span {
+  color: var(--color-slate-400);
+  font-weight: 500;
+}
+
+.highlight-slate h4 span {
+  color: var(--color-slate-400);
+  border: 1px solid var(--color-slate-200);
+}
+
+.highlight-slate .summary span,
+.highlight-slate h4 span,
+.highlight-slate h3 span::after {
+  background-color: var(--color-slate-50);
+}
+
+.blog.highlight-slate a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-slate-500);
+}
+
+.blog.highlight-slate a:hover {
+  color: var(--color-slate-500);
+}
+
+progress.highlight-slate::-webkit-progress-value {
+  background-color: var(--color-slate-400);
+}
+
+.highlight-red .summary span,
+.highlight-red h4 span,
+.highlight-red h3 span {
+  color: var(--color-red-400);
+  font-weight: 500;
+}
+
+.highlight-red h4 span {
+  color: var(--color-red-400);
+  border: 1px solid var(--color-red-200);
+}
+
+.highlight-red .summary span,
+.highlight-red h4 span,
+.highlight-red h3 span::after {
+  background-color: var(--color-red-50);
+}
+
+.blog.highlight-red a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-red-500);
+}
+
+.blog.highlight-red a:hover {
+  color: var(--color-red-500);
+}
+
+progress.highlight-red::-webkit-progress-value {
+  background-color: var(--color-red-400);
+}
+
+.highlight-yellow .summary span,
+.highlight-yellow h3 span {
+  color: var(--color-yellow-500);
+  font-weight: 500;
+}
+
+.highlight-yellow h4 span {
+  color: var(--color-yellow-400);
+  border: 1px solid var(--color-yellow-200);
+}
+
+.highlight-yellow .summary span,
+.highlight-yellow h4 span,
+.highlight-yellow h3 span::after {
+  background-color: var(--color-yellow-50);
+}
+
+.blog.highlight-yellow a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-yellow-500);
+}
+
+.blog.highlight-yellow a:hover {
+  color: var(--color-yellow-500);
+}
+
+progress.highlight-yellow::-webkit-progress-value {
+  background-color: var(--color-yellow-400);
+}
+
+.highlight-orange .summary span,
+.highlight-orange h3 span {
+  color: var(--color-orange-400);
+  font-weight: 500;
+}
+
+.highlight-orange h4 span {
+  color: var(--color-orange-400);
+  border: 1px solid var(--color-orange-200);
+}
+
+.highlight-orange .summary span,
+.highlight-orange h4 span,
+.highlight-orange h3 span::after {
+  background-color: var(--color-orange-50);
+}
+
+.blog.highlight-orange a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-orange-500);
+}
+
+.blog.highlight-orange a:hover {
+  color: var(--color-orange-500);
+}
+
+progress.highlight-orange::-webkit-progress-value {
+  background-color: var(--color-orange-400);
+}
+
+.highlight-emerald .summary span,
+.highlight-emerald h3 span {
+  color: var(--color-emerald-500);
+  font-weight: 500;
+}
+
+.highlight-emerald h4 span {
+  color: var(--color-emerald-500);
+  border: 1px solid var(--color-emerald-200);
+}
+
+.highlight-emerald .summary span,
+.highlight-emerald h4 span,
+.highlight-emerald h3 span::after {
+  background-color: var(--color-emerald-50);
+}
+
+.blog.highlight-emerald a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-emerald-500);
+}
+
+.blog.highlight-emerald a:hover {
+  color: var(--color-emerald-500);
+}
+
+progress.highlight-emerald::-webkit-progress-value {
+  background-color: var(--color-emerald-500);
+}
+
+.highlight-teal .summary span,
+.highlight-teal h3 span {
+  color: var(--color-teal-400);
+  font-weight: 500;
+}
+
+.highlight-teal h4 span {
+  color: var(--color-teal-400);
+  border: 1px solid var(--color-teal-200);
+}
+
+.highlight-teal .summary span,
+.highlight-teal h4 span,
+.highlight-teal h3 span::after {
+  background-color: var(--color-teal-50);
+}
+
+.blog.highlight-teal a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-teal-500);
+}
+
+.blog.highlight-teal a:hover {
+  color: var(--color-teal-500);
+}
+
+progress.highlight-teal::-webkit-progress-value {
+  background-color: var(--color-teal-400);
+}
+
+.highlight-blue .summary span,
+.highlight-blue h3 span {
+  color: var(--color-blue-400);
+  font-weight: 500;
+}
+
+.highlight-blue h4 span {
+  color: var(--color-blue-400);
+  border: 1px solid var(--color-blue-200);
+}
+
+.highlight-blue .summary span,
+.highlight-blue h4 span,
+.highlight-blue h3 span::after {
+  background-color: var(--color-blue-50);
+}
+
+.blog.highlight-blue a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-blue-500);
+}
+
+.blog.highlight-blue a:hover {
+  color: var(--color-blue-500);
+}
+
+progress.highlight-blue::-webkit-progress-value {
+  background-color: var(--color-blue-400);
+}
+
+.highlight-purple .summary span,
+.highlight-purple h3 span {
+  color: var(--color-purple-400);
+  font-weight: 500;
+}
+
+.highlight-purple h4 span {
+  color: var(--color-purple-400);
+  border: 1px solid var(--color-purple-200);
+}
+
+.highlight-purple .summary span,
+.highlight-purple h4 span,
+.highlight-purple h3 span::after {
+  background-color: var(--color-purple-50);
+}
+
+.blog.highlight-purple a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-purple-500);
+}
+
+.blog.highlight-purple a:hover {
+  color: var(--color-purple-500);
+}
+
+progress.highlight-purple::-webkit-progress-value {
+  background-color: var(--color-purple-400);
+}
+
+.highlight-rose .summary span,
+.highlight-rose h3 span {
+  color: var(--color-rose-400);
+  font-weight: 500;
+}
+
+.highlight-rose h4 span {
+  color: var(--color-rose-400);
+  border: 1px solid var(--color-rose-200);
+}
+
+.highlight-rose .summary span,
+.highlight-rose h4 span,
+.highlight-rose h3 span::after {
+  background-color: var(--color-rose-50);
+}
+
+.blog.highlight-rose a {
+  font-weight: 500;
+  border-bottom: 2px solid var(--color-rose-500);
+}
+
+.blog.highlight-rose a:hover {
+  color: var(--color-rose-500);
+}
+
+progress.highlight-rose::-webkit-progress-value {
+  background-color: var(--color-rose-400);
+}
+
+article[class*="highlight-"] h3 span {
+  position: relative;
+  display: inline-block;
+}
+
+article[class*="highlight-"] h3 span::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 15%;
+  transform: rotate(1deg);
+  background-color: currentColor;
+  opacity: 0.25;
+}
+
+.archive h3 span {
+  font-weight: 500;
+  display: inline-block;
+  position: relative;
+}
+
+.archive h3 span::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 20%;
+  transform: rotate(1deg);
+}
+
+img.lazy {
+  opacity: 0;
+  transition: all 1s ease;
+}
+
+header h1 span::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0px;
+  width: 100%;
+  height: 10%;
+  transform: rotate(1deg);
+  background-color: var(--header-bar, var(--color-blue-100));
+}
+
+/* Section theme colors, matching each section's activity graph. */
+.theme-rose {
+  --header-bar: var(--color-rose-100);
+  --header-link: var(--color-rose-500);
+}
+
+.theme-purple {
+  --header-bar: var(--color-purple-100);
+  --header-link: var(--color-purple-500);
+}
+
+.theme-emerald {
+  --header-bar: var(--color-emerald-100);
+  --header-link: var(--color-emerald-500);
+}
+
+.theme-orange {
+  --header-bar: var(--color-orange-100);
+  --header-link: var(--color-orange-500);
+}
+
+header h3 span {
+  font-weight: 500;
+  display: inline-block;
+  position: relative;
+}
+
+header h3 span::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 20%;
+  transform: rotate(1deg);
+}
+
+section header p a {
+  @apply text-slate-600;
+  border-bottom: 2px solid var(--header-link, var(--color-blue-500));
+}
+
+section header p a:hover {
+  @apply text-slate-900;
+}
+
+.fade-in-animation {
+  -webkit-animation: fade-in-animation 1s cubic-bezier(0.39, 0.575, 0.565, 1)
+    both;
+  animation: fade-in-animation 1s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+}
+
+@-webkit-keyframes fade-in-animation {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-animation {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.heartbeat-animation:hover {
+  -webkit-animation: heartbeat-animation 1.5s ease-in-out 2 both;
+  animation: heartbeat-animation 1.5s ease-in-out 2 both;
+}
+
+@-webkit-keyframes heartbeat-animation {
+  from {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-transform-origin: center center;
+    transform-origin: center center;
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+
+  10% {
+    -webkit-transform: scale(0.91);
+    transform: scale(0.91);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+  }
+
+  17% {
+    -webkit-transform: scale(0.98);
+    transform: scale(0.98);
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+
+  33% {
+    -webkit-transform: scale(0.87);
+    transform: scale(0.87);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+  }
+
+  45% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+}
+
+@keyframes heartbeat-animation {
+  from {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-transform-origin: center center;
+    transform-origin: center center;
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+
+  10% {
+    -webkit-transform: scale(0.91);
+    transform: scale(0.91);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+  }
+
+  17% {
+    -webkit-transform: scale(0.98);
+    transform: scale(0.98);
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+
+  33% {
+    -webkit-transform: scale(0.87);
+    transform: scale(0.87);
+    -webkit-animation-timing-function: ease-in;
+    animation-timing-function: ease-in;
+  }
+
+  45% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+    -webkit-animation-timing-function: ease-out;
+    animation-timing-function: ease-out;
+  }
+}
+
+.jello-animation:hover {
+  -webkit-animation: jello-animation 0.9s both;
+  animation: jello-animation 0.9s both;
+}
+
+@-webkit-keyframes jello-animation {
+  0% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  30% {
+    -webkit-transform: scale3d(1.25, 0.75, 1);
+    transform: scale3d(1.25, 0.75, 1);
+  }
+
+  40% {
+    -webkit-transform: scale3d(0.75, 1.25, 1);
+    transform: scale3d(0.75, 1.25, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.15, 0.85, 1);
+    transform: scale3d(1.15, 0.85, 1);
+  }
+
+  65% {
+    -webkit-transform: scale3d(0.95, 1.05, 1);
+    transform: scale3d(0.95, 1.05, 1);
+  }
+
+  75% {
+    -webkit-transform: scale3d(1.05, 0.95, 1);
+    transform: scale3d(1.05, 0.95, 1);
+  }
+
+  100% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes jello-animation {
+  0% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  30% {
+    -webkit-transform: scale3d(1.25, 0.75, 1);
+    transform: scale3d(1.25, 0.75, 1);
+  }
+
+  40% {
+    -webkit-transform: scale3d(0.75, 1.25, 1);
+    transform: scale3d(0.75, 1.25, 1);
+  }
+
+  50% {
+    -webkit-transform: scale3d(1.15, 0.85, 1);
+    transform: scale3d(1.15, 0.85, 1);
+  }
+
+  65% {
+    -webkit-transform: scale3d(0.95, 1.05, 1);
+    transform: scale3d(0.95, 1.05, 1);
+  }
+
+  75% {
+    -webkit-transform: scale3d(1.05, 0.95, 1);
+    transform: scale3d(1.05, 0.95, 1);
+  }
+
+  100% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@-webkit-keyframes zoom-animation {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-animation {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Project card sparkline */
+.project-split {
+  --split-shade: rgba(15, 23, 42, 0.05);
+  --split-line: var(--color-slate-300);
+}
+
+.project-split .split-fill {
+  fill: var(--split-shade);
+}
+
+.project-split .split-area {
+  background-color: var(--split-shade);
+}
+
+.project-split .split-line {
+  stroke: var(--split-line);
+}
+
+/*
+Dark Mode
+*/
+
+html.dark .project-split {
+  --split-shade: rgba(0, 0, 0, 0.25);
+  --split-line: var(--color-slate-500);
+}
+
+html.dark {
+  --color-backdrop: #020617;
+  --color-white: #0b1220;
+
+  --color-slate-50: #0f172a;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #334155;
+  --color-slate-300: #475569;
+  --color-slate-400: #64748b;
+  --color-slate-500: #94a3b8;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #e2e8f0;
+  --color-slate-800: #f1f5f9;
+  --color-slate-900: #f8fafc;
+
+  --color-gray-50: #0f172a;
+  --color-gray-100: #1e293b;
+  --color-gray-200: #334155;
+  --color-gray-300: #475569;
+
+  /*
+  Faint accent washes on empty activity-graph cells, article title bars,
+  the divider line. Drop them to a dark surface so they don't glow.
+  */
+  --color-blue-50: #1e293b;
+  --color-rose-50: #1e293b;
+  --color-purple-50: #1e293b;
+  --color-emerald-50: #1e293b;
+  --color-red-50: #1e293b;
+  --color-orange-50: #1e293b;
+  --color-yellow-50: #1e293b;
+  --color-green-50: #1e293b;
+  --color-teal-50: #1e293b;
+  --color-indigo-50: #1e293b;
+  --color-pink-50: #1e293b;
+}
+
+/* highlight-slate needs a bit of love */
+.dark .highlight-slate .summary span,
+.dark .highlight-slate h4 span,
+.dark .highlight-slate h3 span::after {
+  background-color: var(--color-slate-100);
+}
+
+/* Activity-graph quartiles */
+.dark .activity-graph {
+  --color-emerald-300: var(--color-emerald-900);
+  --color-emerald-400: var(--color-emerald-800);
+  --color-emerald-500: var(--color-emerald-700);
+
+  --color-purple-300: var(--color-purple-900);
+  --color-purple-400: var(--color-purple-800);
+  --color-purple-500: var(--color-purple-700);
+
+  --color-rose-300: var(--color-rose-900);
+  --color-rose-400: var(--color-rose-800);
+  --color-rose-500: var(--color-rose-700);
+
+  --color-blue-300: var(--color-blue-900);
+  --color-blue-400: var(--color-blue-800);
+  --color-blue-500: var(--color-blue-700);
+}
+
+.dark body {
+  color: var(--color-slate-700);
+}
+
+/*
+Keep white labels (badges, tooltips, the 404 card) readable on their
+colored/black backgrounds, where remapped white would hide them.
+*/
+.dark [class~="text-white"] {
+  color: #fff;
+}
+
+/* Explicit black borders */
+.dark [class~="border-black"] {
+  border-color: var(--color-slate-700);
+}
+
+/* Dark mode row cards */
+.dark [class~="shadow-slate-100"] {
+  border-color: var(--color-slate-100);
+  --tw-shadow-color: var(--color-slate-950);
+}
+
+/* Inline code uses text-black via the prose-inline-code utility. */
+.dark
+  .article-prose
+  :where(:not(pre) > code):not(
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
+  color: var(--color-slate-800);
+}
+
+/* Rotated highlight bars */
+.dark #navigation li {
+  --nav-bar-active: var(--color-blue-400);
+  --nav-bar-hover: var(--color-blue-600);
+}
+
+.dark #navigation li.highlight-rose {
+  --nav-bar-active: var(--color-rose-700);
+  --nav-bar-hover: var(--color-rose-800);
+}
+
+.dark #navigation li.highlight-purple {
+  --nav-bar-active: var(--color-purple-700);
+  --nav-bar-hover: var(--color-purple-800);
+}
+
+.dark #navigation li.highlight-emerald {
+  --nav-bar-active: var(--color-emerald-700);
+  --nav-bar-hover: var(--color-emerald-800);
+}
+
+.dark #navigation li.highlight-orange {
+  --nav-bar-active: var(--color-orange-700);
+  --nav-bar-hover: var(--color-orange-800);
+}
+
+.dark header h1 span::after {
+  background-color: var(--header-bar, var(--color-blue-500));
+}
+
+.dark .theme-rose {
+  --header-bar: var(--color-rose-600);
+  --header-link: var(--color-rose-400);
+}
+
+.dark .theme-purple {
+  --header-bar: var(--color-purple-800);
+  --header-link: var(--color-purple-400);
+}
+
+.dark .theme-emerald {
+  --header-bar: var(--color-emerald-800);
+  --header-link: var(--color-emerald-400);
+}
+
+.dark .theme-orange {
+  --header-bar: var(--color-orange-800);
+  --header-link: var(--color-orange-400);
+}
+
+.dark section header p a {
+  border-bottom-color: var(--header-link, var(--color-blue-400));
+}
+
+/* Particle MEmitter */
+.me-particle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Above the drawer panel (z-1300) and its backdrop blur, so the
+     mini-mes fly free on small screens instead of sulking behind it. */
+  z-index: 1400;
+  pointer-events: none;
+  border-radius: 9999px;
+  border: 2px solid var(--color-white);
+  box-shadow: 0 0 0 3px var(--color-blue-400);
+  object-fit: cover;
+  will-change: transform;
+}
+
+/* Agitate my face on hover. */
+@keyframes me-agitate {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-2deg) scale(1.03);
+  }
+  45% {
+    transform: rotate(2deg) scale(1.03);
+  }
+  70% {
+    transform: rotate(-1deg) scale(1.03);
+  }
+  90% {
+    transform: rotate(2deg) scale(1.02);
+  }
+}
+
+#me-spawner:hover {
+  animation: me-agitate 0.3s ease-in-out infinite;
+}

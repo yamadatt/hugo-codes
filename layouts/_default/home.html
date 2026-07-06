@@ -1,0 +1,24 @@
+{{ define "main" }}
+  {{ partial "header.html" . }}
+  <section
+    class="fade-in-animation mx-auto mb-2 hidden max-w-4xl p-2 pb-4 sm:mb-6 sm:block sm:px-0"
+  >
+    {{ $dates := slice }}
+    {{ range partialCached "timeline/events.html" . }}
+      {{ $dates = $dates | append .date }}
+    {{ end }}
+    {{ range where site.RegularPages "Section" "blog" }}
+      {{ $dates = $dates | append .Date }}
+    {{ end }}
+
+    {{ partial "activity-graph.html" (dict "dates" $dates "color" "blue" "type" "all") }}
+  </section>
+
+  <section class="fade-in-animation mb-8 sm:hidden">
+    {{ partial "activity-heatline.html" (dict "dates" $dates "color" "blue") }}
+  </section>
+
+  <section class="fade-in-animation mx-auto mb-10 max-w-4xl">
+    {{ partial "timeline.html" . }}
+  </section>
+{{ end }}

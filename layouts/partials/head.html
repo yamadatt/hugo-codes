@@ -1,0 +1,76 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
+<meta name="generator" content="Hugo" />
+<link rel="canonical" href="{{ .Permalink }}" />
+
+{{/* Apply the saved theme before paint to avoid a flash of the wrong mode. */}}
+<script>
+  (function () {
+    try {
+      var p = localStorage.getItem("theme") || "system";
+      var d =
+        p === "dark" ||
+        (p === "system" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.classList.toggle("dark", d);
+    } catch (e) {}
+  })();
+</script>
+
+{{ $title := site.Title }}
+{{ $description := .Site.Params.Description }}
+{{ if not .IsHome }}
+  {{ $subtitle := .Params.title_safe }}
+  {{ if not $subtitle }}
+    {{ $subtitle = cond ( not .Data.Term ) .Title .Data.Term }}
+  {{ end }}
+
+  {{ $title = printf "%s · %s" $subtitle $title }}
+  {{ $description = .Summary }}
+{{ end }}
+
+
+<title>{{ $title }}</title>
+<meta name="title" content="{{ $title }}" />
+<meta name="description" content="{{ $description | truncate 160 }}" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="{{ site.BaseURL }}" />
+<meta property="og:title" content="{{ $title }}" />
+<meta property="og:description" content="{{ $description | truncate 160 }}" />
+<meta property="og:image" content="{{ site.BaseURL }}images/og-banner.svg" />
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:url" content="{{ site.BaseURL }}" />
+<meta property="twitter:title" content="{{ $title }}" />
+<meta property="twitter:description" content="{{ $description }}" />
+{{ with site.Params.social.twitter }}
+  <meta name="twitter:creator" content="{{ . }}" />
+{{ end }}
+<meta name="twitter:image" content="{{ site.BaseURL }}images/og-banner.svg" />
+
+<!-- RSS Feeds -->
+<link
+  rel="alternate"
+  href="/articles.xml"
+  type="application/rss+xml"
+  title="{{ site.Title }} · Articles"
+/>
+<link
+  rel="alternate"
+  href="/bits.xml"
+  type="application/rss+xml"
+  title="{{ site.Title }} · Bits"
+/>
+
+<!-- Sitemap -->
+<link rel="sitemap" href="/sitemap.xml" />
+
+<!-- Google Fonts -->
+<!-- <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" /> -->
+
+{{ partial "head/css.html" . }}
+{{ partialCached "head/js.html" . }}

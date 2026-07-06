@@ -1,0 +1,9 @@
+{{/* A quote bit: the body is the quote, .Params.source the attribution. */}}
+<blockquote class="not-prose text-lg leading-relaxed font-light text-slate-700">
+  {{ .Content }}
+  {{ with .Params.source }}
+    <cite class="mt-2 block text-sm font-normal text-slate-400 not-italic"
+      >&mdash; {{ . }}</cite
+    >
+  {{ end }}
+</blockquote>

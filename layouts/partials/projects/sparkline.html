@@ -1,0 +1,69 @@
+{{/* A 15-day activity sparkline as a series of a trailing multi-day rolling
+  sum, drawn as straight segments.
+
+  Params (dict):
+  dates - slice of time.Time (e.g. the .Date of each tagged page)
+  id    - value unique per card (kept for callers)
+*/}}
+{{- $days := 15 -}}
+{{- $window := 15 -}}
+{{- $w := 600 -}}
+{{- $h := 80 -}}
+{{- $pad := 10 -}}
+
+{{- $daily := newScratch -}}
+{{- $nowUnix := now.Unix -}}
+{{- $secondsPerDay := 86400 -}}
+{{- range $d := .dates -}}
+  {{- $ago := int (div (sub $nowUnix $d.Unix) $secondsPerDay) -}}
+  {{- if and (ge $ago 0) (lt $ago $days) -}}
+    {{- $daily.Add (printf "%d" (sub (sub $days 1) $ago)) 1 -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Trailing N-day rolling sum across the window, plus its peak for scaling. */ -}}
+{{- $series := slice -}}
+{{- $max := 0 -}}
+{{- range $i := seq 0 (sub $days 1) -}}
+  {{- $from := sub $i (sub $window 1) -}}
+  {{- $from = cond (lt $from 0) 0 $from -}}
+  {{- $sum := 0 -}}
+  {{- range $j := seq $from $i -}}
+    {{- $sum = add $sum ($daily.Get (printf "%d" $j) | default 0) -}}
+  {{- end -}}
+  {{- $series = $series | append $sum -}}
+  {{- if gt $sum $max -}}{{- $max = $sum -}}{{- end -}}
+{{- end -}}
+
+{{- /* Map the series to a straight-segment polyline. */ -}}
+{{- $innerH := sub $h (mul 2 $pad) -}}
+{{- $baseline := float (sub $h $pad) -}}
+{{- $line := "" -}}
+{{- range $i, $v := $series -}}
+  {{- $x := mul (div (float $i) (float (sub $days 1))) (float $w) -}}
+  {{- $y := $baseline -}}
+  {{- if gt $max 0 -}}
+    {{- $y = sub $baseline (mul (div (float $v) (float $max)) (float $innerH)) -}}
+  {{- end -}}
+  {{- $line = printf "%s%s%.1f,%.1f" $line (cond (eq $i 0) "M" "L") $x $y -}}
+{{- end -}}
+{{- $area := printf "%s L%.1f,%.1f L0.0,%.1f Z" $line (float $w) (float $h) (float $h) -}}
+
+
+<svg
+  viewBox="0 0 {{ $w }} {{ $h }}"
+  preserveAspectRatio="none"
+  class="block h-20 w-full"
+  aria-hidden="true"
+>
+  <path class="split-fill" d="{{ $area }}" stroke="none" />
+  <path
+    class="split-line"
+    d="{{ $line }}"
+    fill="none"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    vector-effect="non-scaling-stroke"
+  />
+</svg>

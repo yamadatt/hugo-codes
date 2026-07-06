@@ -1,0 +1,31 @@
+{{- /*
+  Inline an SVG icon, replacing the old FontAwesome runtime class-swap.
+
+  Params (dict):
+  icon  - icon name, matching a file in assets/icons/{ui,brands}/ (required)
+  pack  - "brands" -> assets/icons/brands/, anything else -> assets/icons/ui/
+  class - classes applied to the wrapping <span>
+  title - optional title attribute (tooltip) on the wrapping <span>
+
+  The SVGs are normalised to width/height 1em and fill="currentColor", so the
+  span's font-size classes (text-xs, text-xl, ...) control size and its
+  text-{colour}-* classes control colour - exactly as the old fa-* span did.
+  The base `icon` class makes the inlined <svg> inline-block (see main.css), so
+  it flows with adjacent text instead of breaking onto its own line.
+  Icons are sourced via scripts/fetch-icons.sh; see THIRD-PARTY-LICENSES.md.
+  */
+-}}
+{{- $icon := .icon -}}
+{{- $dir := cond (eq (.pack | default "duotone") "brands") "brands" "ui" -}}
+{{- $class := .class | default "" -}}
+
+{{- with resources.Get (printf "icons/%s/%s.svg" $dir $icon) -}}
+  <span
+    class="icon {{ $class }}"
+    {{ with $.title }}title="{{ . }}"{{ end }}
+    >{{ .Content | safeHTML }}</span
+  >
+{{- else -}}
+  {{- warnf "icon partial: missing icon %q in pack %q" $icon $dir -}}
+  <span class="icon {{ $class }}"></span>
+{{- end -}}

@@ -1,0 +1,171 @@
+{{/* Returns every "interstitial" activity event normalised into a uniform shape */}}
+
+{{ $gh := partialCached "changelog/sources.html" . }}
+{{ $events := slice }}
+
+{{ $meta := dict
+  "commit" (dict "icon" "code-commit" "colour" "green" "label" "committed")
+  "pull-opened" (dict "icon" "code-pull-request" "colour" "green" "label" "opened a pull request")
+  "pull-merged" (dict "icon" "code-merge" "colour" "purple" "label" "merged a pull request")
+  "pull-closed" (dict "icon" "code-pull-request-closed" "colour" "red" "label" "closed a pull request")
+  "issue-opened" (dict "icon" "circle-dot" "colour" "green" "label" "opened an issue")
+  "issue-closed" (dict "icon" "circle-check" "colour" "purple" "label" "closed an issue")
+  "release" (dict "icon" "cube" "colour" "blue" "label" "published a release")
+  "fork" (dict "icon" "code-fork" "colour" "slate" "label" "forked the repo")
+  "watch" (dict "icon" "eye" "colour" "purple" "label" "starred the repo")
+  "create" (dict "icon" "code-branch" "colour" "slate" "label" "created")
+  "delete" (dict "icon" "fire" "colour" "red" "label" "deleted")
+  "comment" (dict "icon" "comments" "colour" "slate" "label" "left a comment")
+  "member" (dict "icon" "exclamation" "colour" "orange" "label" "updated members")
+  "public" (dict "icon" "lock-open" "colour" "emerald" "label" "open-sourced the repo")
+  "gollum" (dict "icon" "book" "colour" "slate" "label" "updated the wiki")
+  "review" (dict "icon" "code-pull-request" "colour" "purple" "label" "reviewed a pull request")
+  "sponsor" (dict "icon" "heart" "colour" "pink" "label" "sponsored")
+  "discussion" (dict "icon" "comments" "colour" "slate" "label" "started a discussion")
+}}
+
+{{ $byType := dict
+  "ForkEvent" "fork"
+  "WatchEvent" "watch"
+  "CreateEvent" "create"
+  "DeleteEvent" "delete"
+  "IssueCommentEvent" "comment"
+  "CommitCommentEvent" "comment"
+  "PullRequestReviewCommentEvent" "comment"
+  "MemberEvent" "member"
+  "PublicEvent" "public"
+  "GollumEvent" "gollum"
+  "PullRequestReviewEvent" "review"
+  "PullRequestReviewThreadEvent" "review"
+  "SponsorshipEvent" "sponsor"
+  "DiscussionEvent" "discussion"
+}}
+
+{{ range $gh.events }}
+  {{ $c := . }}
+  {{ with index $byType $c.type }}
+    {{ $m := index $meta . }}
+    {{ with $c.created_at }}
+      {{ $title := $m.label }}
+      {{ with $c.payload.ref }}{{ $title = printf "%s %s" $m.label . }}{{ end }}
+
+      {{ $url := "" }}
+      {{ with $c.payload.comment }}{{ $url = .html_url }}{{ end }}
+      {{ with $c.payload.forkee }}{{ $url = .html_url }}{{ end }}
+      {{ with $c.payload.discussion }}{{ $url = .html_url }}{{ end }}
+      {{ if eq $c.type "PublicEvent" }}
+        {{ $url = printf "https://github.com/%s" $c.repo.name }}
+      {{ end }}
+
+      {{ $events = $events | append (merge (dict
+        "kind" $c.type
+        "date" (time.AsTime .)
+        "title" $title
+        "url" $url
+        "actor" $c.actor.login
+        "data" $c) $m)
+      }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ range $gh.commits }}
+  {{ $c := . }}
+  {{ with $c.commit.author.date }}
+    {{ $actor := $c.commit.author.name }}
+    {{ with $c.author }}{{ $actor = .login }}{{ end }}
+    {{ $events = $events | append (merge (dict
+      "kind" "commit"
+      "date" (time.AsTime .)
+      "title" (index (split $c.commit.message "\n") 0)
+      "url" $c.html_url
+      "actor" $actor
+      "data" $c) (index $meta "commit"))
+    }}
+  {{ end }}
+{{ end }}
+
+{{ range $gh.pulls }}
+  {{ $p := . }}
+  {{ $date := or $p.merged_at $p.closed_at $p.created_at }}
+  {{ $state := "opened" }}
+  {{ if $p.merged_at }}
+    {{ $state = "merged" }}
+  {{ else if eq $p.state "closed" }}
+    {{ $state = "closed" }}
+  {{ end }}
+  {{ with $date }}
+    {{ $events = $events | append (merge (dict
+      "kind" "pull"
+      "date" (time.AsTime .)
+      "title" $p.title
+      "url" $p.html_url
+      "actor" $p.user.login
+      "state" $state
+      "number" $p.number
+      "data" $p) (index $meta (printf "pull-%s" $state)))
+    }}
+  {{ end }}
+{{ end }}
+
+{{ range $gh.issues }}
+  {{ $issue := . }}
+  {{ if not $issue.pull_request }}
+    {{ $date := or $issue.closed_at $issue.created_at }}
+    {{ $state := cond (eq $issue.state "closed") "closed" "opened" }}
+    {{ with $date }}
+      {{ $events = $events | append (merge (dict
+        "kind" "issue"
+        "date" (time.AsTime .)
+        "title" $issue.title
+        "url" $issue.html_url
+        "actor" $issue.user.login
+        "state" $issue.state
+        "number" $issue.number
+        "data" $issue) (index $meta (printf "issue-%s" $state)))
+      }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ range $gh.releases }}
+  {{ $r := . }}
+  {{ with $r.published_at }}
+    {{ $actor := "" }}
+    {{ with $r.author }}{{ $actor = .login }}{{ end }}
+    {{ $events = $events | append (merge (dict
+      "kind" "release"
+      "date" (time.AsTime .)
+      "title" (or $r.name $r.tag_name)
+      "url" $r.html_url
+      "actor" $actor
+      "data" $r) (index $meta "release"))
+    }}
+  {{ end }}
+{{ end }}
+
+{{ $bitMeta := partialCached "bits/meta.html" . }}
+{{ range where site.RegularPages "Section" "bits" }}
+  {{ $b := . }}
+  {{ $type := $b.Type }}
+  {{ $bm := index $bitMeta $type }}
+  {{ if not $bm }}
+    {{ $type = "blurb" }}{{ $bm = index $bitMeta "blurb" }}
+  {{ end }}
+  {{/* link/video bits carry their own headline; quote/blurb use their text. */}}
+  {{ $title := $b.Title }}
+  {{ if not (or (eq $type "link") (eq $type "video")) }}
+    {{ $title = truncate 90 (htmlUnescape $b.Plain) }}
+  {{ end }}
+  {{ $events = $events | append (merge (dict
+    "kind" "bit"
+    "type" $type
+    "date" $b.Date
+    "title" $title
+    "url" (printf "/bits/#bit-%s" $b.File.ContentBaseName)
+    "actor" ""
+    "data" $b) $bm)
+  }}
+{{ end }}
+
+{{ return (sort $events "date" "desc") }}

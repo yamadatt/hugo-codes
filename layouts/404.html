@@ -1,0 +1,44 @@
+<!doctype html>
+<html
+  lang="{{ site.Language.Locale }}"
+  dir="{{ or site.Language.Direction `ltr` }}"
+>
+  <head>
+    {{ partial "head.html" . }}
+  </head>
+  <body>
+    <div
+      class="flex h-screen bg-cover bg-no-repeat"
+      style="background-image: url(/images/lost.jpg);"
+    >
+      <main
+        class="m-auto rounded-lg bg-black p-10 text-center text-white opacity-80"
+      >
+        <h1 class="pb-5 text-4xl font-bold">Ehhh... You seem to be lost.</h1>
+        <p class="pb-5">
+          Not sure what you're looking for, but you're not going to find it
+          here.
+        </p>
+        <p class="pb-5">
+          <a href="{{ .Site.Home.RelPermalink }}">
+            Let's take you back home.
+          </a>
+        </p>
+        <p class="text-xs text-slate-400">
+          Photo by
+          <a
+            class="font-bold"
+            href="https://unsplash.com/@aperturevintage?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash"
+            >Aperture Vintage</a
+          >
+          on
+          <a
+            class="font-bold"
+            href="https://unsplash.com/photos/starry-sky-Z6EpCdMcoUU?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash"
+            >Unsplash</a
+          >
+        </p>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+{{- /*
+  Human, casual relative date for a time.Time. Returns a plain string.
+
+  Scale:
+  < 12h ............ just now
+  < 24h ............ today
+  1 day ............ yesterday
+  2-3 days ......... recently
+  4-7 days ......... "{n} days ago"
+  8-13 days ........ a week and change
+  14-20 days ....... a couple of weeks ago
+  21-30 days ....... a few weeks ago
+  31-60 days ....... about a month ago
+  61-364 days ...... "{n} months ago"
+  1-2 years ........ about a year ago
+  2+ years ......... "{n} years ago"
+
+  Usage: {{ partial "functions/relative-date.html" .Date
+}}
+*/ -}}
+{{- $date := . -}}
+{{- $hours := (now.Sub $date).Hours -}}
+{{- $days := math.Floor (div $hours 24) -}}
+{{- $out := "" -}}
+{{- if lt $hours 12 -}}
+  {{- $out = "たった今" -}}
+{{- else if lt $hours 24 -}}
+  {{- $out = "今日" -}}
+{{- else if lt $days 2 -}}
+  {{- $out = "昨日" -}}
+{{- else if lt $days 4 -}}
+  {{- $out = "最近" -}}
+{{- else if lt $days 8 -}}
+  {{- $out = printf "%d日前" (int $days) -}}
+{{- else if lt $days 14 -}}
+  {{- $out = "1週間ほど前" -}}
+{{- else if lt $days 21 -}}
+  {{- $out = "2週間ほど前" -}}
+{{- else if lt $days 31 -}}
+  {{- $out = "数週間前" -}}
+{{- else if lt $days 61 -}}
+  {{- $out = "約1か月前" -}}
+{{- else if lt $days 365 -}}
+  {{- $out = printf "%dか月前" (int (math.Round (div $days 30))) -}}
+{{- else if lt $days 730 -}}
+  {{- $out = "約1年前" -}}
+{{- else -}}
+  {{- $out = printf "%d年前" (int (math.Round (div $days 365))) -}}
+{{- end -}}
+{{- return $out -}}

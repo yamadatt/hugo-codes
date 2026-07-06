@@ -1,0 +1,12 @@
+{
+  "plugins": ["prettier-plugin-go-template", "prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./assets/css/main.css",
+  "overrides": [
+    {
+      "files": ["*.html"],
+      "options": {
+        "parser": "go-template"
+      }
+    }
+  ]
+}

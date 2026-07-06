@@ -1,0 +1,101 @@
+baseURL = "https://go-notes.example.com/"
+defaultContentLanguage = "ja"
+locale = "ja-JP"
+title = "Go Notes"
+enableGitInfo = false
+
+[build]
+  [build.buildStats]
+    enable = true
+  [[build.cachebusters]]
+    source = 'assets/watching/hugo_stats\.json'
+    target = 'css'
+  [[build.cachebusters]]
+    source = 'assets/.*\.css'
+    target = 'css'
+
+[taxonomies]
+  tag = "tags"
+  category = "category"
+
+[menus]
+  [[menus.main]]
+    name = "Home"
+    pageRef = "/"
+    weight = 10
+    [menus.main.params]
+      icon = "house"
+  [[menus.main]]
+    name = "Topics"
+    pageRef = "/projects"
+    weight = 20
+    [menus.main.params]
+      highlight = "orange"
+      icon = "stack"
+  [[menus.main]]
+    name = "Archive"
+    pageRef = "/archive"
+    weight = 30
+    [menus.main.params]
+      highlight = "purple"
+      icon = "clock-rotate-left"
+  [[menus.main]]
+    name = "Snippets"
+    pageRef = "/bits"
+    weight = 40
+    [menus.main.params]
+      highlight = "rose"
+      icon = "brackets-curly"
+
+  [[menus.elsewhere]]
+    name = "Articles Feed"
+    url = "/articles.xml"
+    weight = 10
+    [menus.elsewhere.params]
+      icon = "rss"
+  [[menus.elsewhere]]
+    name = "Snippets Feed"
+    url = "/bits.xml"
+    weight = 20
+    [menus.elsewhere.params]
+      icon = "rss"
+
+[sitemap]
+  changeFreq = "daily"
+
+[outputFormats]
+  [outputFormats.ArticlesRSS]
+    mediaType = "application/rss+xml"
+    baseName = "articles"
+    isPlainText = false
+    isHTML = false
+    rel = "alternate"
+  [outputFormats.BitsRSS]
+    mediaType = "application/rss+xml"
+    baseName = "bits"
+    isPlainText = false
+    isHTML = false
+    rel = "alternate"
+  [outputFormats.SearchIndex]
+    mediaType = "application/json"
+    baseName = "searchindex"
+    isPlainText = true
+
+[outputs]
+  home = ["HTML", "ArticlesRSS", "BitsRSS", "SearchIndex"]
+  section = ["HTML"]
+
+[params]
+  description = "Goの実装、設計、運用を小さく検証しながら整理する技術ブログです。"
+  tagline = "Go実装メモ"
+  [params.author]
+    email = "hello@example.com"
+    name = "Go Notes"
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 3
+    ordered = true
+    startLevel = 2
+  [markup.highlight]
+    style = "github-dark"

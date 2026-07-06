@@ -1,0 +1,107 @@
+{{- /*
+  Theme switcher: a single button beside the drawer's search box.
+  Clicking cycles Light → Dark → System; the icon reflects the current
+  preference. System follows the OS and reacts to live changes.
+  */
+-}}
+<button
+  type="button"
+  class="flex aspect-square shrink-0 cursor-pointer items-center justify-center rounded-lg border bg-white text-slate-400 transition hover:text-slate-600"
+  data-theme-toggle
+  aria-label="Switch theme"
+>
+  <svg
+    data-icon="light"
+    class="hidden h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4" />
+    <path
+      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+    />
+  </svg>
+  <svg
+    data-icon="dark"
+    class="hidden h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+  <svg
+    data-icon="system"
+    class="h-4 w-4"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="3" width="20" height="14" rx="2" />
+    <path d="M8 21h8M12 17v4" />
+  </svg>
+</button>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var button = document.querySelector("[data-theme-toggle]");
+    if (!button) return;
+
+    var icons = {
+      light: button.querySelector('[data-icon="light"]'),
+      dark: button.querySelector('[data-icon="dark"]'),
+      system: button.querySelector('[data-icon="system"]'),
+    };
+    var order = ["light", "dark", "system"];
+    var mql = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function stored() {
+      try {
+        return localStorage.getItem("theme") || "system";
+      } catch (e) {
+        return "system";
+      }
+    }
+
+    function effectiveDark(pref) {
+      return pref === "dark" || (pref === "system" && mql.matches);
+    }
+
+    function apply(pref) {
+      root.classList.toggle("dark", effectiveDark(pref));
+      Object.keys(icons).forEach(function (k) {
+        if (icons[k]) icons[k].classList.toggle("hidden", k !== pref);
+      });
+      button.title = "Theme: " + pref;
+    }
+
+    button.addEventListener("click", function () {
+      var next = order[(order.indexOf(stored()) + 1) % order.length];
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) {}
+      apply(next);
+    });
+
+    {{/* React to OS changes only while following the system preference. */}}
+    mql.addEventListener("change", function () {
+      if (stored() === "system") apply("system");
+    });
+
+    apply(stored());
+  })();
+</script>

@@ -1,0 +1,59 @@
+<div class="text-slate-300">
+  built with
+  <a
+    href="https://gohugo.io"
+    title="Hugo"
+    class="border-b hover:border-b-slate-400 hover:text-slate-400"
+    >Hugo</a
+  >
+  for
+  <svg
+    class="inline-block h-5 w-5 text-blue-500"
+    fill="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M4 4h16v16H4zM7 8h10v2H7zm0 4h7v2H7z" />
+  </svg>
+  Go engineers
+</div>
+
+<div
+  class="mt-6 flex items-center justify-center gap-1.5 font-mono text-xs text-slate-300"
+>
+  <svg
+    class="h-3 w-3"
+    fill="currentColor"
+    viewBox="0 0 448 512"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <path
+      d="M0 64C0 46.3 14.3 32 32 32c229.8 0 416 186.2 416 416c0 17.7-14.3 32-32 32s-32-14.3-32-32C384 253.6 226.4 96 32 96C14.3 96 0 81.7 0 64zM0 416a64 64 0 1 1 128 0 64 64 0 1 1-128 0zM0 224c0-17.7 14.3-32 32-32c141.4 0 256 114.6 256 256c0 17.7-14.3 32-32 32s-32-14.3-32-32c0-106-86-192-192-192c-17.7 0-32-14.3-32-32z"
+    />
+  </svg>
+  <span>rss:</span>
+  <a
+    href="/articles.xml"
+    title="Articles RSS feed"
+    class="border-b hover:border-b-slate-400 hover:text-slate-400"
+    >articles</a
+  >
+  <span>&amp;</span>
+  <a
+    href="/bits.xml"
+    title="Bits RSS feed"
+    class="border-b hover:border-b-slate-400 hover:text-slate-400"
+    >snippets</a
+  >
+</div>
+
+<div class="mt-8 text-center font-mono text-sm text-slate-200">
+  {{ $date := now }}
+  {{ if .GitInfo }}
+    {{ $date = .GitInfo.AuthorDate }}
+  {{ end }}
+
+  {{ $date | time.Format ":date_long" }}
+  {{ $date | time.Format ":time_medium" }}
+</div>

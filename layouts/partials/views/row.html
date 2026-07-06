@@ -1,0 +1,33 @@
+<article
+  class="highlight-{{ .Params.highlight }} relative mx-2 mb-2 flex rounded-md border px-2 py-4 shadow-sm shadow-slate-100 transition sm:mx-0 sm:mb-8 sm:rounded-2xl sm:p-8 sm:shadow-md md:hover:scale-105"
+>
+  <div class="summary mr-4 hidden w-16 pt-1 md:inline-block">
+    {{ partial "icon.html" (dict "pack" .Params.pack "icon" .Params.icon "class" "flex h-14 w-14 items-center justify-center rounded-full p-3 text-3xl") }}
+  </div>
+
+  <div class="flex-1">
+    <h3
+      class="mb-0 text-center font-light text-slate-800 sm:mb-2 sm:text-left sm:text-xl md:text-2xl"
+    >
+      <a href="{{ .RelPermalink }}" title="{{ .Title | plainify }}">
+        {{ .LinkTitle | safeHTML }}
+      </a>
+    </h3>
+    <p class="hidden text-sm text-slate-400 sm:block">
+      Published
+      <span class="border-b-2 border-b-slate-100 font-medium text-slate-500">
+        {{ partial "functions/relative-date.html" .Date }}
+      </span>
+      in
+      <span class="border-b-2 border-b-slate-100 font-medium text-slate-500"
+        >{{ .Params.category }}</span
+      >
+      {{ with .GetTerms "tags" }}
+        {{ if ne (len .) 0 }}
+          +
+          {{ partial "tags/inline.html" . }}
+        {{ end }}
+      {{ end }}
+    </p>
+  </div>
+</article>

@@ -1,0 +1,29 @@
+{{/* The home-page article list as a single timeline: each fat article row is
+  preceded by a summary of everything (bits + changelog activity) that happened
+  between it and the next-newer article. The gap above the newest article spans
+  up to "now", so recent activity since the last post shows too.
+
+  Empty gaps render nothing (see timeline/interstitial.html). The changelog
+  side is the last ~100 GitHub events, so gaps between older posts undercount.
+*/}}
+{{ $articles := first 10 (where site.RegularPages "Section" "blog") }}
+{{ $events := partialCached "timeline/events.html" . }}
+{{ $now := now }}
+
+{{ range $i, $article := $articles }}
+  {{ $upper := $now }}
+  {{ if gt $i 0 }}
+    {{ $upper = (index $articles (sub $i 1)).Date }}
+  {{ end }}
+  {{ $lower := $article.Date }}
+
+  {{ $group := slice }}
+  {{ range $e := $events }}
+    {{ if and ($e.date.After $lower) (not ($e.date.After $upper)) }}
+      {{ $group = $group | append $e }}
+    {{ end }}
+  {{ end }}
+
+  {{ partial "timeline/interstitial.html" $group }}
+  {{ partial "views/row.html" $article }}
+{{ end }}

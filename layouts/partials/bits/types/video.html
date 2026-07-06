@@ -1,0 +1,32 @@
+{{/* A video bit: .Title is the headline, .Params.link the video link,
+  .Params.source a label (channel, duration). Thumbnail is a play placeholder;
+  set .Params.thumb to a still image to show it instead.
+*/}}
+<div class="flex items-center gap-3">
+  <a
+    href="{{ .Params.link }}"
+    target="_blank"
+    rel="noopener"
+    class="relative flex aspect-video w-32 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-slate-50"
+  >
+    {{ with .Params.thumb }}
+      <img src="{{ . }}" alt="" class="h-full w-full object-cover" />
+    {{ end }}
+    {{ partial "icon.html" (dict "pack" "duotone" "icon" "play" "class" "absolute text-xl text-slate-500 drop-shadow") }}
+  </a>
+  <div class="min-w-0">
+    <a
+      href="{{ .Params.link }}"
+      target="_blank"
+      rel="noopener"
+      class="font-medium text-slate-700 hover:text-slate-900"
+      >{{ .Title | safeHTML }}</a
+    >
+    {{ with .Params.source }}
+      <div class="mt-0.5 text-xs text-slate-400">{{ . }}</div>
+    {{ end }}
+  </div>
+</div>
+{{ with .Content }}
+  <div class="mt-1 text-sm font-light text-slate-500 [&_p]:m-0">{{ . }}</div>
+{{ end }}

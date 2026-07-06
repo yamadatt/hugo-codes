@@ -1,0 +1,13 @@
+{{ $count :=  len . }}
+{{ range $index, $tag := . }}
+  <span class="border-b-2 border-b-slate-100 text-slate-500"
+    ><a href="{{ $tag.RelPermalink }}" title="">#{{ $tag.Data.Term }}</a></span
+  >
+  {{ if eq $count 2 }}
+    {{ if eq $index 0 }}&nbsp;&amp;&nbsp;{{ end }}
+  {{ else if and (ge $count 2) (eq $index (sub $count 2)) }}
+    &nbsp;&amp;&nbsp;
+  {{ else }}
+    {{ if and (ne $count 1) (ne $index (sub $count 1)) }},{{ end }}
+  {{ end }}
+{{ end }}

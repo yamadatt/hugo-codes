@@ -1,0 +1,157 @@
+{{ define "main" }}
+  <section class="fade-in-animation mx-auto mb-10 max-w-4xl">
+    <header class="theme-orange">
+      <h1 class="my-4 text-center text-2xl leading-tight md:my-8 md:text-5xl">
+        Goの <span class="relative font-bold">Topics</span>.
+      </h1>
+      <p
+        class="mb-4 pb-4 text-center text-sm font-extralight text-slate-500 md:mb-10 md:pb-0 md:text-2xl"
+      >
+        並行処理、HTTP、エラー設計など、<br />記事をテーマごとに追えるようにしています。
+      </p>
+    </header>
+
+    <section
+      class="fade-in-animation mx-auto mb-2 hidden max-w-4xl p-2 pb-4 sm:mb-6 sm:block sm:px-0"
+    >
+      {{/* Activity across every project's tag, deduped by page. */}}
+      {{ $projectTags := slice }}
+      {{ range hugo.Data.projects.projects }}
+        {{ $projectTags = $projectTags | append .tag }}
+      {{ end }}
+
+      {{ $dates := slice }}
+      {{ range where site.RegularPages "Params.tags" "intersect" $projectTags }}
+        {{ $dates = $dates | append .Date }}
+      {{ end }}
+
+      {{ partial "activity-graph.html" (dict "dates" $dates "color" "orange" "type" "project") }}
+    </section>
+
+    <section class="fade-in-animation mb-8 sm:hidden">
+      {{ partial "activity-heatline.html" (dict "dates" $dates "color" "orange") }}
+    </section>
+
+    {{/* Bit type -> icon/colour/label, shared with the bits feed. */}}
+    {{ $meta := partialCached "bits/meta.html" . }}
+
+    {{/* Bits have no own URL (build.render: never); they're anchored on /bits/. */}}
+    {{ $bitsPage := site.GetPage "/bits" }}
+
+
+    <div class="items-start gap-4 px-2 sm:grid-cols-2 sm:gap-6 sm:px-0">
+      {{ range $i, $p := hugo.Data.projects.projects }}
+        {{/* Gather every blog post + bit that shares this project's tag. */}}
+        {{ $tagged := sort (where site.RegularPages "Params.tags" "intersect" (slice $p.tag)) "Date" "desc" }}
+
+
+        <article
+          class="highlight-{{ $p.highlight }} relative mb-4 overflow-hidden rounded-md border px-2 py-4 shadow-sm shadow-slate-100 transition sm:mb-8 sm:rounded-2xl sm:p-8 sm:shadow-md md:hover:scale-105"
+        >
+          <div class="flex">
+            <div
+              class="summary mr-4 hidden w-12 flex-col items-center gap-3 pt-1 sm:flex"
+            >
+              {{ partial "icon.html" (dict "pack" $p.pack "icon" $p.icon "class" "flex h-14 w-14 items-center justify-center rounded-full p-3 text-3xl") }}
+            </div>
+
+            <div class="flex-1">
+              <div class="gap-2 sm:mb-2 sm:justify-start">
+                <h3
+                  class="m-0 pt-2 font-light text-slate-800 sm:text-xl md:text-2xl"
+                >
+                  {{ $p.name }}
+                </h3>
+                <p class="text-xs text-slate-400">
+                  {{ $p.description }}
+                </p>
+                <p class="hidden gap-2 text-xs text-slate-400">
+                  {{ if or $p.website $p.repo }}
+                    {{ with $p.website }}
+                      <a
+                        href="{{ . }}"
+                        class="inline-flex items-center gap-1 hover:text-slate-700"
+                        >{{ partial "icon.html" (dict "pack" "duotone" "icon" "globe" "class" "text-xs") }}
+                        website</a
+                      >
+                    {{ end }}
+                    {{ with $p.repo }}
+                      <a
+                        href="{{ . }}"
+                        class="inline-flex items-center gap-1 hover:text-slate-700"
+                        >{{ partial "icon.html" (dict "pack" "brands" "icon" "github" "class" "text-xs") }}
+                        github</a
+                      >
+                    {{ end }}
+
+                  {{ end }}
+                </p>
+              </div>
+            </div>
+          </div>
+          {{ with $tagged }}
+            {{ $sparkDates := slice }}
+            {{ range $tagged }}
+              {{ $sparkDates = $sparkDates | append .Date }}
+            {{ end }}
+            <div
+              class="project-split relative -mx-2 mt-4 -mb-4 sm:-mx-8 sm:mt-6 sm:-mb-8"
+            >
+              {{ partial "activity-heatline.html" (dict "dates" $sparkDates "color" $p.highlight) }}
+
+
+              <div class="split-area px-2 pt-3 pb-4 sm:px-8 sm:pt-4 sm:pb-8">
+                <p class="mb-2 text-xs text-slate-400">
+                  activity tagged with
+                  #{{ $p.tag }}
+                </p>
+                <ul class="m-0 list-none space-y-2 p-0">
+                  {{ range first 5 . }}
+                    {{ $isBlog := eq .Section "blog" }}
+                    {{ $m := index $meta .Type }}
+                    {{ if not $m }}{{ $m = index $meta "blurb" }}{{ end }}
+                    <li class="flex items-center gap-2 text-sm">
+                      <span class="text-slate-400">
+                        {{ if $isBlog }}
+                          {{ partial "icon.html" (dict "pack" .Params.pack "icon" .Params.icon "class" "text-xs") }}
+                        {{ else }}
+                          {{ partial "icon.html" (dict "pack" $m.pack "icon" $m.icon "class" "text-xs") }}
+                        {{ end }}
+                      </span>
+                      {{ $href := .RelPermalink }}
+                      {{ if not $isBlog }}
+                        {{ $href = printf "%s#bit-%s" $bitsPage.RelPermalink .File.ContentBaseName }}
+                      {{ end }}
+                      <a
+                        href="{{ $href }}"
+                        class="min-w-0 truncate border-b border-slate-200 text-slate-600 hover:text-slate-900"
+                        >{{ with .LinkTitle }}
+                          {{ . | safeHTML }}
+                        {{ else }}
+                          {{ .Summary | plainify | htmlUnescape | strings.TrimSpace | truncate 80 }}
+                        {{ end }}</a
+                      >
+                      <span
+                        class="ml-auto hidden shrink-0 text-xs text-slate-400 sm:inline-block"
+                      >
+                        {{ if $isBlog }}article{{ else }}{{ $m.label }}{{ end }}
+                        &middot;
+                        {{ partial "functions/relative-date.html" .Date }}
+                      </span>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+            </div>
+          {{ else }}
+            <div
+              class="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-400"
+            >
+              Nothing tagged #{{ $p.tag }} yet.
+            </div>
+          {{ end }}
+        </article>
+      {{ end }}
+    </div>
+  </section>
+{{ end }}

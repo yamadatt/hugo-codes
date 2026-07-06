@@ -1,0 +1,25 @@
+{{ define "main" }}
+  <section class="fade-in-animation mx-auto max-w-4xl">
+    <header class="theme-purple">
+      <h1
+        class="text-center text-2xl leading-tight font-bold sm:my-4 md:my-8 md:text-5xl"
+      >
+        The <span class="relative font-normal">Archive</span>.
+      </h1>
+      <p
+        class="mb-10 hidden text-center text-2xl font-extralight text-slate-500 md:block"
+      >
+        Here you will find everything under the sun.<br />Have a nice
+        <i>scroll</i> through memory lane.
+      </p>
+    </header>
+    <div class="divider mx-auto hidden max-w-4xl md:block lg:block">
+      <h3 class="mb-8 text-center text-xl font-medium text-slate-600">
+        <span class="bg-white px-4">{{ .Title }}</span>
+      </h3>
+    </div>
+    {{ range .Data.Pages }}
+      {{ partial "views/row.html" . }}
+    {{ end }}
+  </section>
+{{ end }}

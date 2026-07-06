@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Go Notes">
+  <rect width="128" height="128" rx="28" fill="#f8fafc"/>
+  <circle cx="64" cy="64" r="48" fill="#e0f2fe"/>
+  <path d="M28 48h72M22 64h66M36 80h72" stroke="#0284c7" stroke-width="10" stroke-linecap="round"/>
+  <text x="64" y="72" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#0f172a">Go</text>
+</svg>

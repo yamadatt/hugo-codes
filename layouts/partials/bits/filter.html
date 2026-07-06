@@ -1,0 +1,103 @@
+{{- /* Bit-type filter for the bits page. */ -}}
+{{- $meta := partialCached "bits/meta.html" . -}}
+
+{{- /* Distinct types actually present (map ranging isn't ordered). */ -}}
+{{- $present := slice -}}
+{{- range where site.RegularPages "Section" "bits" -}}
+  {{- $t := .Type -}}
+  {{- if not (index $meta $t) }}{{ $t = "blurb" }}{{ end -}}
+  {{- $present = $present | append $t -}}
+{{- end -}}
+{{- $present = $present | uniq -}}
+
+{{- $order := slice -}}
+{{- range (slice "quote" "link" "video" "blurb" "update") -}}
+  {{- if in $present . }}{{ $order = $order | append . }}{{ end -}}
+{{- end -}}
+
+{{- range $present -}}
+  {{- if not (in $order .) }}{{ $order = $order | append . }}{{ end -}}
+{{- end -}}
+
+{{- /* No point in a filter with a single category. */ -}}
+{{- if gt (len $present) 1 }}
+  <div
+    id="bit-filter"
+    role="group"
+    aria-label="Filter bits by type"
+    class="mb-8 flex flex-wrap items-center justify-center gap-2"
+  >
+    {{/* "All" — active by default. The active-state classes
+      (opacity-100 ring-1 ring-inset ring-current) must appear in server
+      output so Tailwind generates them; the JS only toggles them.
+    */}}
+    <button
+      type="button"
+      data-filter="all"
+      aria-label="All"
+      aria-pressed="true"
+      class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 opacity-100 ring-1 ring-current transition ring-inset sm:py-1"
+    >
+      {{ partial "icon.html" (dict "pack" "duotone" "icon" "shapes" "class" "text-base sm:text-xs") }}
+      <span class="hidden sm:inline">All</span>
+    </button>
+    {{ range $order }}
+      {{ $m := index $meta . }}
+      <button
+        type="button"
+        data-filter="{{ . }}"
+        aria-label="{{ $m.label | title }}s"
+        aria-pressed="false"
+        class="bg-{{ $m.colour }}-50 text-{{ $m.colour }}-600 inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium opacity-60 transition sm:py-1"
+      >
+        {{ partial "icon.html" (dict "pack" $m.pack "icon" $m.icon "class" "text-base sm:text-xs") }}
+        <span class="hidden sm:inline">{{ $m.label | title }}s</span>
+      </button>
+    {{ end }}
+  </div>
+
+  <script type="text/javascript">
+    (function () {
+      function init() {
+        var bar = document.getElementById("bit-filter");
+        var feed = document.getElementById("bit-feed");
+        if (!bar || !feed) return;
+
+        var pills = bar.querySelectorAll("[data-filter]");
+        var ACTIVE = ["opacity-100", "ring-1", "ring-inset", "ring-current"];
+        var bits = feed.querySelectorAll("[data-bit-type]");
+
+        function apply(type) {
+          pills.forEach(function (pill) {
+            var on = pill.dataset.filter === type;
+            pill.classList.toggle("opacity-60", !on);
+            ACTIVE.forEach(function (c) {
+              pill.classList.toggle(c, on);
+            });
+            pill.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+
+          bits.forEach(function (bit) {
+            // Inline style beats utility classes, so flex items hide reliably.
+            bit.style.display =
+              type === "all" || bit.dataset.bitType === type ? "" : "none";
+          });
+        }
+
+        pills.forEach(function (pill) {
+          pill.addEventListener("click", function () {
+            apply(pill.dataset.filter);
+          });
+        });
+      }
+
+      // The feed renders after this partial, so wait for the full DOM before
+      // wiring up — otherwise #bit-feed isn't there yet and we'd bail out.
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+{{- end }}

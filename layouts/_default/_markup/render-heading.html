@@ -1,0 +1,22 @@
+{{- $id := .Anchor -}}
+<h{{ .Level }} id="{{ $id }}"{{ with .Attributes.class }} class="{{ . }}"{{ end }}>
+  <a class="heading-link" href="#{{ $id }}">
+    {{- /* Gutter link glyph: self-contained, inherits color, no FontAwesome dependency. */ -}}
+    <span class="heading-anchor" aria-hidden="true">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        focusable="false"
+      >
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+    </span>
+    {{- .Text | safeHTML -}}
+  </a>
+</h{{ .Level }}>

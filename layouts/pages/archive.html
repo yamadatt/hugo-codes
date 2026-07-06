@@ -1,0 +1,34 @@
+{{ define "main" }}
+  <section class="fade-in-animation mx-auto mb-10 max-w-4xl">
+    <header class="theme-purple">
+      <h1 class="my-4 text-center text-2xl leading-tight md:my-8 md:text-5xl">
+        Go記事の <span class="relative font-bold">Archive</span>.
+      </h1>
+      <p
+        class="mb-4 pb-4 text-center text-sm font-extralight text-slate-500 md:mb-10 md:pb-0 md:text-2xl"
+      >
+        長めの記事を時系列でまとめています。<br />設計判断と実装例を後から読み返せる形で残します。
+      </p>
+    </header>
+
+    <section
+      class="fade-in-animation mx-auto mb-2 hidden max-w-4xl p-2 pb-4 sm:mb-6 sm:block sm:px-0"
+    >
+      {{/* Collect activity timestamps from all blog articles. */}}
+      {{ $dates := slice }}
+      {{ range where site.RegularPages "Section" "blog" }}
+        {{ $dates = $dates | append .Date }}
+      {{ end }}
+
+      {{ partial "activity-graph.html" (dict "dates" $dates "color" "purple" "type" "article") }}
+    </section>
+
+    <section class="fade-in-animation mb-8 sm:hidden">
+      {{ partial "activity-heatline.html" (dict "dates" $dates "color" "purple") }}
+    </section>
+
+    {{ range (where .Site.RegularPages "Section" "blog") }}
+      {{ partial "views/row.html" . }}
+    {{ end }}
+  </section>
+{{ end }}

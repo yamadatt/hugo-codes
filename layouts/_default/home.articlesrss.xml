@@ -1,0 +1,45 @@
+{{- /* Articles - blog posts only. */ -}}
+{{- $articles := (where site.RegularPages "Section" "blog").ByDate.Reverse -}}
+{{- $author := "" -}}
+{{- with site.Params.author -}}
+  {{- $author = printf "%s (%s)" .email .name -}}
+{{- end -}}
+{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>{{ site.Title }} · Articles</title>
+    <link>{{ site.BaseURL }}</link>
+    <description>Longer-form articles from {{ site.Title }}.</description>
+    <generator>Hugo</generator>
+    <language>{{ or site.Language.Locale "en-US" }}</language>
+    {{- with $author }}
+    <managingEditor>{{ . }}</managingEditor>
+    <webMaster>{{ . }}</webMaster>
+    {{- end }}
+    {{- with $articles }}
+    <lastBuildDate>{{ (index . 0).Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>
+    {{- end }}
+    {{- with .OutputFormats.Get "ArticlesRSS" }}
+    <atom:link href="{{ .Permalink }}" rel="self" type="application/rss+xml" />
+    {{- end }}
+    {{- range $articles }}
+    <item>
+      <title>{{ or .Params.title_safe .Title | plainify | transform.XMLEscape | safeHTML }}</title>
+      <link>{{ .Permalink }}</link>
+      <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
+      {{- with $author }}
+      <author>{{ . }}</author>
+      {{- end }}
+      <guid>{{ .Permalink }}</guid>
+      {{- with .Params.category }}
+      <category>{{ . | transform.XMLEscape | safeHTML }}</category>
+      {{- end }}
+      {{- range .Params.tags }}
+      <category>{{ . | transform.XMLEscape | safeHTML }}</category>
+      {{- end }}
+      <description>{{ .Summary | transform.XMLEscape | safeHTML }}</description>
+      <content:encoded>{{ printf "<![CDATA[%s]]>" (.Content | string) | safeHTML }}</content:encoded>
+    </item>
+    {{- end }}
+  </channel>
+</rss>

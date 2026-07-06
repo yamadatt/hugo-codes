@@ -1,0 +1,345 @@
+{{- /*
+  Left-hand drawer navigation. The trigger mirrors the theme switcher in the
+  opposite corner; the panel slides in over a blurred backdrop. Menu entries
+  come from [menus.main] in hugo.toml, grouped by params.group ("Pages" when
+  unset), followed by [menus.elsewhere] for external links and feeds.
+*/}}
+<div data-drawer>
+  <button
+    type="button"
+    class="fixed top-3 left-3 z-1200 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border bg-white text-slate-600 shadow-sm shadow-slate-100 transition hover:text-slate-900 lg:hidden"
+    data-drawer-open
+    aria-label="Open navigation"
+    aria-controls="site-drawer"
+    aria-expanded="false"
+  >
+    <svg
+      class="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16M4 12h16M4 18h10" />
+    </svg>
+  </button>
+
+  <div
+    class="drawer-backdrop fixed inset-0 z-1250 bg-slate-900/40 backdrop-blur-xs"
+    data-drawer-backdrop
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    id="site-drawer"
+    class="drawer-panel fixed top-0 left-0 z-1300 flex h-dvh w-80 max-w-[85vw] flex-col border-r bg-white shadow-xl md:w-72"
+    data-drawer-panel
+    role="dialog"
+    aria-label="Site navigation"
+    tabindex="-1"
+  >
+    <div class="drawer-header border-b px-6 pt-4 pb-5">
+      <button
+        type="button"
+        class="absolute top-3 right-3 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-50 hover:text-slate-800"
+        data-drawer-close
+        aria-label="Close navigation"
+      >
+        <svg
+          class="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+      <div class="flex items-center gap-3">
+        <img
+          id="me-spawner"
+          class="h-12 w-12 shrink-0 cursor-pointer rounded-full border-2 border-white ring-2 ring-blue-600 select-none active:scale-95"
+          src="/images/avatar.svg"
+          alt="Go Notes"
+          title="Go Notes"
+        />
+        <div>
+          <p class="text-lg font-semibold text-slate-800">Go Notes</p>
+          <p class="mt-0.5 text-xs text-slate-400">{{ site.Params.tagline }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-stretch gap-2 px-4 pt-3 lg:px-3 lg:pt-5">
+      <button
+        type="button"
+        class="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-sm text-slate-400 transition hover:text-slate-600"
+        data-palette-open
+        aria-label="Search the site"
+      >
+        <svg
+          class="h-4 w-4 shrink-0"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <span class="flex-1 text-left">Search ...</span>
+        <kbd
+          class="rounded-md border bg-slate-50 px-1.5 py-0.5 font-sans text-[10px] text-slate-400"
+          data-palette-kbd
+          >⌘K</kbd
+        >
+      </button>
+      {{ partial "theme-toggle.html" . }}
+    </div>
+
+    <nav id="navigation" class="flex-1 overflow-y-auto px-3 pb-6">
+      {{ $current := . }}
+
+      {{/* Build the drawer's sections: main-menu entries grouped by
+        params.group ("Pages" when unset, ordered by first appearance),
+        then the elsewhere menu as a closing section. Every entry
+        renders through the same loop below.
+      */}}
+      {{ $groups := slice }}
+      {{ range site.Menus.main }}
+        {{ $group := .Params.group | default "Pages" }}
+        {{ if not (in $groups $group) }}
+          {{ $groups = $groups | append $group }}
+        {{ end }}
+      {{ end }}
+
+      {{ $sections := slice }}
+      {{ range $group := $groups }}
+        {{ $items := slice }}
+        {{ range site.Menus.main }}
+          {{ if eq (.Params.group | default "Pages") $group }}
+            {{ $items = $items | append . }}
+          {{ end }}
+        {{ end }}
+        {{ $sections = $sections | append (dict "title" $group "items" $items) }}
+      {{ end }}
+      {{ with site.Menus.elsewhere }}
+        {{ $sections = $sections | append (dict "title" "Feeds" "items" .) }}
+      {{ end }}
+
+      {{ range $sections }}
+        <p
+          class="px-3 pt-6 pb-2 text-xs font-semibold tracking-widest text-slate-400 uppercase"
+        >
+          <span class="select-none">#</span> {{ .title }}
+        </p>
+        <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
+          {{ range .items }}
+            {{ $entry := . }}
+            {{ $external := hasPrefix .URL "http" }}
+            {{ $active := or ($current.IsMenuCurrent "main" .) ($current.HasMenuCurrent "main" .) }}
+            {{ $active = or $active (eq .Name $current.Title) }}
+            {{ $active = or $active (eq .URL $current.RelPermalink) }}
+            {{ $active = or $active (and (eq .Name "Blog") (eq $current.Section "blog")) }}
+            <li class="{{ with .Params.highlight }}highlight-{{ . }}{{ end }}">
+              <a
+                href="{{ .URL }}"
+                title="{{ .Name }}"
+                class="{{ if $active }}
+                  active font-semibold text-slate-800
+                {{ else }}
+                  text-slate-600
+                {{ end }} flex items-center gap-3 rounded-lg px-3 py-2 transition hover:bg-slate-50 hover:text-slate-900"
+                {{ if $active }}aria-current="page"{{ end }}
+                {{ if $external }}target="_blank" rel="me noopener"{{ end }}
+              >
+                {{ with .Params.icon }}
+                  {{ partial "icon.html" (dict "pack" ($entry.Params.pack | default "duotone") "icon" . "class" "text-lg text-slate-400") }}
+                {{ end }}
+                <span class="label relative">{{ .Name }}</span>
+                {{ with .Params.badge_text }}
+                  <span class="rounded-md bg-red-600 px-1 text-xs text-white"
+                    >{{ . }}</span
+                  >
+                {{ end }}
+                {{ if $external }}
+                  {{ partial "icon.html" (dict "icon" "arrow-up-right" "class" "ml-auto text-xs text-slate-300") }}
+                {{ end }}
+              </a>
+            </li>
+          {{ end }}
+        </ul>
+      {{ end }}
+    </nav>
+  </aside>
+</div>
+
+<script>
+  (function () {
+    var wrap = document.querySelector("[data-drawer]");
+    if (!wrap) return;
+
+    var root = document.documentElement;
+    var openButton = wrap.querySelector("[data-drawer-open]");
+    var closeButton = wrap.querySelector("[data-drawer-close]");
+    var backdrop = wrap.querySelector("[data-drawer-backdrop]");
+    var panel = wrap.querySelector("[data-drawer-panel]");
+    var lastFocused = null;
+
+    {{/* At lg+ the drawer is permanently docked (pure CSS); the overlay
+        machinery below only applies to smaller screens. */}}
+    var large = window.matchMedia("(min-width: 64rem)");
+
+    function isOpen() {
+      return panel.classList.contains("is-open");
+    }
+
+    function focusables() {
+      return panel.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+    }
+
+    function open() {
+      lastFocused = document.activeElement;
+      panel.classList.add("is-open");
+      backdrop.classList.add("is-open");
+      panel.setAttribute("aria-modal", "true");
+      openButton.setAttribute("aria-expanded", "true");
+      root.style.overflow = "hidden";
+      panel.focus({ preventScroll: true });
+    }
+
+    function close() {
+      panel.classList.remove("is-open");
+      backdrop.classList.remove("is-open");
+      panel.removeAttribute("aria-modal");
+      openButton.setAttribute("aria-expanded", "false");
+      root.style.overflow = "";
+      if (lastFocused && lastFocused.focus) lastFocused.focus();
+    }
+
+    openButton.addEventListener("click", function () {
+      isOpen() ? close() : open();
+    });
+    closeButton.addEventListener("click", close);
+    backdrop.addEventListener("click", close);
+
+    {{/* Growing into lg: retire the overlay; the docked state takes over. */}}
+    large.addEventListener("change", function (e) {
+      if (e.matches && isOpen()) close();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (!isOpen()) return;
+
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+
+      {{/* Keep Tab cycling inside the panel while it's open. */}}
+      if (e.key === "Tab") {
+        var items = focusables();
+        if (!items.length) return;
+        var first = items[0];
+        var last = items[items.length - 1];
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  })();
+</script><script>
+  {{/* Click the face to spray a burst of bouncing mini-mes around the viewport. */}}
+  (function () {
+    var src = document.getElementById("me-spawner");
+    if (!src) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    var particles = [];
+    var MAX = 60;
+    var running = false;
+
+    function spawn() {
+      var rect = src.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+
+      for (var i = 0; i < 12 && particles.length < MAX; i++) {
+        var size = 28 + Math.random() * 20;
+        var el = document.createElement("img");
+        el.src = src.src;
+        el.alt = "";
+        el.className = "me-particle";
+        el.style.width = el.style.height = size + "px";
+        document.body.appendChild(el);
+
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 2 + Math.random() * 4;
+        particles.push({
+          el: el,
+          x: cx - size / 2,
+          y: cy - size / 2,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          rot: Math.random() * 360,
+          vr: (Math.random() - 0.5) * 12,
+          size: size,
+          born: performance.now(),
+          life: 6000,
+        });
+      }
+
+      if (!running) {
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function tick(now) {
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+
+      for (var i = particles.length - 1; i >= 0; i--) {
+        var p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x <= 0) { p.x = 0; p.vx = -p.vx; }
+        else if (p.x + p.size >= w) { p.x = w - p.size; p.vx = -p.vx; }
+        if (p.y <= 0) { p.y = 0; p.vy = -p.vy; }
+        else if (p.y + p.size >= h) { p.y = h - p.size; p.vy = -p.vy; }
+
+        var remaining = p.life - (now - p.born);
+        if (remaining <= 0) {
+          p.el.remove();
+          particles.splice(i, 1);
+          continue;
+        }
+        p.rot += p.vr;
+        if (remaining < 700) p.el.style.opacity = (remaining / 700).toFixed(2);
+        p.el.style.transform =
+          "translate(" + p.x + "px," + p.y + "px) rotate(" + p.rot + "deg)";
+      }
+
+      if (particles.length) requestAnimationFrame(tick);
+      else running = false;
+    }
+
+    src.addEventListener("click", spawn);
+  })();
+</script>

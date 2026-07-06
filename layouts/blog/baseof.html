@@ -1,0 +1,25 @@
+<!doctype html>
+<html
+  lang="{{ site.Language.Locale }}"
+  dir="{{ or site.Language.Direction `ltr` }}"
+>
+  <head>
+    {{ partial "head.html" . }}
+  </head>
+  <body>
+    {{ partial "drawer.html" . }}
+    {{ partial "palette.html" . }}
+    <div
+      class="mx-2 my-4 max-w-6xl rounded-xl bg-white px-2 pt-14 pb-6 sm:mx-4 sm:px-4 md:my-10 md:px-10 md:pt-12 md:pb-10 xl:mx-auto"
+    >
+      <main class="fade-in-animation">
+        {{ block "main" . }}{{ end }}
+      </main>
+    </div>
+    <footer
+      class="mx-auto -mt-2 mb-6 max-w-2xl text-center text-sm text-slate-400 md:-mt-6 md:mb-8"
+    >
+      {{ partial "footer.html" . }}
+    </footer>
+  </body>
+</html>

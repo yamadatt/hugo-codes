@@ -1,0 +1,82 @@
+{{ define "main" }}
+  <div
+    class="blog highlight-{{ .Params.highlight }} mx-auto sm:max-w-full md:max-w-4xl"
+  >
+    <header class="mb-4 border-b pb-4 sm:mb-8 sm:pb-8">
+      <h4 class="mb-6 text-center sm:mb-10">
+        <span
+          class="rounded-full px-2 py-2 text-xs sm:font-normal md:px-4 md:py-3 md:font-medium"
+          >{{ .Params.category }}</span
+        >
+      </h4>
+
+      <h3
+        class="mb-4 text-center text-2xl font-light text-slate-600 sm:mb-8 md:text-5xl"
+      >
+        {{ .LinkTitle | safeHTML }}
+      </h3>
+      <div class="text-center text-sm font-light text-slate-400">
+        written by
+        <strong class="border-b border-slate-300"
+          >{{ site.Params.author.name }}</strong
+        >
+        on
+        <strong class="border-b border-slate-300"
+          >{{ .Date | time.Format ":date_medium" }}</strong
+        ><br class="mb-2" />
+        {{ with .GetTerms "tags" }}
+          {{ if ne (len .) 0 }}
+            {{ partial "tags/inline.html" . }}
+          {{ end }}
+        {{ end }}
+      </div>
+    </header>
+
+    <article
+      class="fade-in-animation mb-4 border-b px-2 pb-4 transition sm:mb-8 sm:px-0 sm:pb-8"
+    >
+      <div class="summary">
+        <div class="article-prose prose-xl py-4">{{ .Summary }}</div>
+        {{ if eq .Params.toc true }}
+          {{ with .TableOfContents }}
+            <section
+              class="toc mx-auto mb-16 rounded-xl bg-gray-50 p-4 text-sm shadow-sm sm:px-24 sm:text-base"
+            >
+              {{ . }}
+            </section>
+          {{ end }}
+        {{ end }}
+      </div>
+      <div class="article-prose prose-xl">
+        {{ .ContentWithoutSummary }}
+      </div>
+    </article>
+  </div>
+
+  <progress
+    class="highlight-{{ .Params.highlight }}"
+    value="0"
+    max="100"
+    data-progress-bar
+  ></progress>
+  <script>
+    function getScrollPercent() {
+      const h = document.documentElement,
+        b = document.body,
+        st = "scrollTop",
+        sh = "scrollHeight";
+      return Math.round(
+        ((h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight)) * 100,
+      );
+    }
+
+    const progressBar = document.querySelector("[data-progress-bar]");
+
+    if (progressBar) {
+      progressBar.setAttribute("value", getScrollPercent());
+      window.addEventListener("scroll", () => {
+        progressBar.setAttribute("value", getScrollPercent());
+      });
+    }
+  </script>
+{{ end }}

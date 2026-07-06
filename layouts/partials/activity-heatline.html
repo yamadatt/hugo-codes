@@ -1,0 +1,71 @@
+{{/* Weekly activity heatline. */}}
+
+{{ $type := .type }}
+{{ $color := .color }}
+{{ $weeks := 52 }}
+{{ $secondsPerWeek := 604800 }}
+
+{{ $counts := newScratch }}
+
+{{ if os.Getenv "HUGO_ACTIVITY_GRAPH_DEMO" }}
+  {{/* This is used to create a convincingly random scatter of
+    synthetic content for testing. Personally, I blame myself
+    for this because I've been a lazy asshole when it comes
+    to writing.
+  */}}
+  {{ range $i := seq 0 (sub $weeks 1) }}
+    {{ $counts.Add (printf "%d" $i) (int (mul (math.Rand) 53)) }}
+  {{ end }}
+{{ else }}
+  {{/* Bucket into the last 26 weeks */}}
+  {{ $nowUnix := now.Unix }}
+  {{ range $d := .dates }}
+    {{ $ago := int (div (sub $nowUnix $d.Unix) $secondsPerWeek) }}
+    {{ if and (ge $ago 0) (lt $ago $weeks) }}
+      {{ $counts.Add (printf "%d" (sub (sub $weeks 1) $ago)) 1 }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* Quartile thresholds over the non-zero weeks like Github: empty weeks
+  stay faint; active weeks split into four colored steps relative to the
+  distribution rather than to a single busiest week.
+*/}}
+{{ $active := slice }}
+{{ range $i := seq 0 (sub $weeks 1) }}
+  {{ $c := $counts.Get (printf "%d" $i) | default 0 }}
+  {{ if gt $c 0 }}{{ $active = $active | append $c }}{{ end }}
+{{ end }}
+{{ $active = sort $active }}
+{{ $n := len $active }}
+{{ $q1 := 0 }}
+{{ $q2 := 0 }}
+{{ $q3 := 0 }}
+{{ if gt $n 0 }}
+  {{ $q1 = index $active (int (mul 0.25 (sub $n 1))) }}
+  {{ $q2 = index $active (int (mul 0.5 (sub $n 1))) }}
+  {{ $q3 = index $active (int (mul 0.75 (sub $n 1))) }}
+{{ end }}
+
+
+<section class="activity-heatline">
+  <div class="grid grid-cols-26">
+    {{ range $i := seq 0 (sub $weeks 1) }}
+      {{ $c := $counts.Get (printf "%d" $i) | default 0 }}
+      {{ $shade := "50" }}
+      {{ if gt $c 0 }}
+        {{ $shade = "600" }}
+        {{ if le $c $q1 }}
+          {{ $shade = "300" }}
+        {{ else if le $c $q2 }}
+          {{ $shade = "400" }}
+        {{ else if le $c $q3 }}
+          {{ $shade = "500" }}
+        {{ end }}
+      {{ end }}
+
+
+      <div class="bg-{{ $color }}-{{ $shade }} h-2"></div>
+    {{ end }}
+  </div>
+</section>

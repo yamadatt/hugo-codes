@@ -1,0 +1,134 @@
+{{ define "main" }}
+  <section id="changelog" class="fade-in-animation mx-auto max-w-4xl">
+    <header class="theme-emerald">
+      <h1 class="my-4 text-center text-2xl leading-tight md:my-8 md:text-5xl">
+        The <span class="relative font-bold">Changelog</span>.
+      </h1>
+      <p
+        class="mb-4 pb-4 text-center text-sm font-extralight text-slate-500 md:mb-10 md:pb-0 md:text-2xl"
+      >
+        The only constant is change and you can view it all here.<br />Or, at
+        least, the latest events pulled directly from
+        <a
+          href="https://github.com/wilhelm-murdoch/wilhelm.codes"
+          title="Check out some code..."
+          target="_blank"
+          >Github</a
+        >.
+      </p>
+    </header>
+
+    {{/* One normalised event stream, shared with the home timeline and bits.
+      Bits are their own thing - the changelog is GitHub activity - so they're
+      filtered out here.
+    */}}
+    {{ $events := first 100 (where (partialCached "timeline/events.html" .) "kind" "ne" "bit") }}
+
+    {{/* Walk the stream once: collect graph timestamps, the ordered list of
+      distinct days, and a per-day change count.
+    */}}
+    {{ $graphDates := slice }}
+    {{ $days := slice }}
+    {{ $counts := newScratch }}
+    {{ range $events }}
+      {{ $graphDates = $graphDates | append .date }}
+      {{ $d := .date.Format "2006-01-02" }}
+      {{ if not (in $days $d) }}{{ $days = $days | append $d }}{{ end }}
+      {{ $counts.Add $d 1 }}
+    {{ end }}
+
+
+    <section
+      class="fade-in-animation mx-auto mb-2 hidden max-w-4xl p-2 pb-4 sm:mb-6 sm:block sm:px-0"
+    >
+      {{ partial "activity-graph.html" (dict "dates" $graphDates "color" "emerald" "type" "Github") }}
+    </section>
+
+    <section class="fade-in-animation mb-8 sm:hidden">
+      {{ partial "activity-heatline.html" (dict "dates" $graphDates "color" "emerald") }}
+    </section>
+
+    {{/* Bits-style rail, grouped by day. A coloured dot per event, a type pill,
+      the actor (with avatar) and a compact one-line summary.
+    */}}
+    <div class="relative mx-auto max-w-2xl px-2 sm:px-0">
+      <div
+        class="absolute top-3 bottom-3 left-5.5 w-px bg-slate-100 sm:left-3.5"
+      ></div>
+
+      {{ range $days }}
+        {{ $day := . }}
+        {{ $t := $day | time.AsTime }}
+        {{ $dayNum := $t.Format "2" }}
+        {{ $count := $counts.Get $day }}
+
+
+        <div
+          class="my-4 ml-11 inline-block rounded-md border p-4 shadow-sm shadow-slate-100 first:mt-0"
+        >
+          <h3 class="text-md font-semibold text-slate-600">
+            {{ $dayNum }}<sup
+              >{{ partial "functions/ordinal.html" $dayNum }}</sup
+            >
+            of
+            {{ $t.Format "January 2006" }}
+          </h3>
+          <span class="text-xs text-slate-400"
+            >{{ $count }} {{ cond (eq $count 1) "change" "changes" }}</span
+          >
+        </div>
+
+        {{ range $events }}
+          {{ if eq $day (.date.Format "2006-01-02") }}
+            <div class="relative mb-6 flex gap-4">
+              <div
+                class="bg-{{ .colour }}-50 text-{{ .colour }}-600 relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-4 ring-white"
+              >
+                {{ partial "icon.html" (dict "pack" (.pack | default "duotone") "icon" .icon "class" "text-xs") }}
+              </div>
+
+              <div class="min-w-0 flex-1 pt-0.5">
+                <div class="mb-2 flex flex-wrap items-center gap-2">
+                  <span
+                    class="bg-{{ .colour }}-50 text-{{ .colour }}-600 rounded-md px-2 py-0.5 text-xs font-medium"
+                    >{{ .label }}</span
+                  >
+                  {{ with .number }}
+                    <span class="font-mono text-xs text-slate-300"
+                      >#{{ . }}</span
+                    >
+                  {{ end }}
+                </div>
+
+                <div class="truncate text-sm text-slate-600">
+                  {{ with .actor }}
+                    <span class="font-medium text-slate-500">
+                      <img
+                        src="https://github.com/{{ . }}.png?size=48"
+                        alt=""
+                        loading="lazy"
+                        onerror="this.remove()"
+                        class="mr-1 inline-block h-4 w-4 rounded-full align-text-bottom ring-1 ring-slate-200"
+                      />{{ . }}</span
+                    >
+                  {{ end }}
+                  {{ if .url }}
+                    <a
+                      href="{{ .url }}"
+                      target="_blank"
+                      rel="noopener"
+                      class="hover:text-slate-800"
+                      >{{ .title }}</a
+                    >
+                  {{ else }}
+                    {{ .title }}
+                  {{ end }}
+                </div>
+              </div>
+            </div>
+          {{ end }}
+        {{ end }}
+      {{ end }}
+    </div>
+  </section>
+{{ end }}

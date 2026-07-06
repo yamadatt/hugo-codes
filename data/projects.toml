@@ -1,0 +1,26 @@
+[[projects]]
+name = "Concurrency"
+description = "context、goroutine、channelを境界で安全に扱うための設計メモ。"
+tag = "concurrency"
+highlight = "blue"
+pack = "duotone"
+icon = "function"
+technology = ["go", "context", "goroutine"]
+
+[[projects]]
+name = "HTTP Services"
+description = "net/httpを中心に、終了処理、タイムアウト、API境界を確認する。"
+tag = "http"
+highlight = "purple"
+pack = "duotone"
+icon = "cell-tower"
+technology = ["go", "net/http", "ops"]
+
+[[projects]]
+name = "Error Design"
+description = "errors.Is/As、sentinel error、ラップの使い分けを整理する。"
+tag = "errors"
+highlight = "emerald"
+pack = "duotone"
+icon = "bug"
+technology = ["go", "errors", "api"]

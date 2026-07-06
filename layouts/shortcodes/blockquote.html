@@ -1,0 +1,10 @@
+<blockquote
+  class="not-prose mx-10 mb-2 p-0 text-center leading-relaxed text-slate-800 italic sm:text-2xl md:text-4xl"
+>
+  “{{ safe.HTML (index .Params 0) }}”
+  {{ if (index .Params 1) }}
+    <cite class="block pt-4 text-center text-sm text-slate-600"
+      >{{ index .Params 1 }}</cite
+    >
+  {{ end }}
+</blockquote>

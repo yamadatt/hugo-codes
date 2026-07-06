@@ -1,0 +1,41 @@
+{{ $type   := ( index .Params 0 ) }}
+{{ $colour := "slate" }}
+{{ $title  := "Invalid Callout" }}
+{{ $icon   := "circle-question" }}
+
+{{ if eq $type "notice" }}
+  {{ $colour = "blue" }}
+  {{ $title  = "For your information, I'll have you know..." }}
+  {{ $icon   = "siren-on" }}
+{{ else if eq $type "warning" }}
+  {{ $colour = "yellow" }}
+  {{ $title  = "Yarr! Ye be warned..." }}
+  {{ $icon   = "skull-crossbones" }}
+{{ else if eq $type "info" }}
+  {{ $colour = "green" }}
+  {{ $title  = "Check this out!" }}
+  {{ $icon   = "hand-point-right" }}
+{{ else if eq $type "error" }}
+  {{ $colour = "red" }}
+  {{ $title  = "5... 4... 3... 2..." }}
+  {{ $icon   = "bomb" }}
+{{ end }}
+
+
+<div
+  class="bg-{{ $colour }}-50 border-b-{{ $colour }}-200 mb-8 rounded-md border-b-2 p-4"
+>
+  <div class="flex">
+    <div class="ml-2">
+      {{ partial "icon.html" (dict "pack" "duotone" "icon" $icon "class" (printf "text-%s-600 h-8" $colour)) }}
+    </div>
+    <div class="ml-3">
+      <h3 class="text-{{ $colour }}-600 m-2 mt-0 pt-1 text-lg font-medium">
+        {{ $title }}
+      </h3>
+      <div class="text-{{ $colour }}-400 m-0 ml-2 text-sm font-light">
+        {{ index .Params 1 | markdownify }}
+      </div>
+    </div>
+  </div>
+</div>

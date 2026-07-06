@@ -1,0 +1,129 @@
+{{/* Weekly activity heatmap. */}}
+
+{{ $type := .type }}
+{{ $color := .color }}
+{{ $weeks := 52 }}
+{{ $secondsPerWeek := 604800 }}
+
+{{ $counts := newScratch }}
+
+{{ if os.Getenv "HUGO_ACTIVITY_GRAPH_DEMO" }}
+  {{/* This is used to create a convincingly random scatter of
+    synthetic content for testing. Personally, I blame myself
+    for this because I've been a lazy asshole when it comes
+    to writing.
+  */}}
+  {{ range $i := seq 0 (sub $weeks 1) }}
+    {{ $counts.Add (printf "%d" $i) (int (mul (math.Rand) 53)) }}
+  {{ end }}
+{{ else }}
+  {{/* Bucket into the last 52 weeks */}}
+  {{ $nowUnix := now.Unix }}
+  {{ range $d := .dates }}
+    {{ $ago := int (div (sub $nowUnix $d.Unix) $secondsPerWeek) }}
+    {{ if and (ge $ago 0) (lt $ago $weeks) }}
+      {{ $counts.Add (printf "%d" (sub (sub $weeks 1) $ago)) 1 }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* Quartile thresholds over the non-zero weeks like Github: empty weeks
+  stay faint; active weeks split into four colored steps relative to the
+  distribution rather than to a single busiest week.
+*/}}
+{{ $active := slice }}
+{{ range $i := seq 0 (sub $weeks 1) }}
+  {{ $c := $counts.Get (printf "%d" $i) | default 0 }}
+  {{ if gt $c 0 }}{{ $active = $active | append $c }}{{ end }}
+{{ end }}
+{{ $active = sort $active }}
+{{ $n := len $active }}
+{{ $q1 := 0 }}
+{{ $q2 := 0 }}
+{{ $q3 := 0 }}
+{{ if gt $n 0 }}
+  {{ $q1 = index $active (int (mul 0.25 (sub $n 1))) }}
+  {{ $q2 = index $active (int (mul 0.5 (sub $n 1))) }}
+  {{ $q3 = index $active (int (mul 0.75 (sub $n 1))) }}
+{{ end }}
+
+
+<section
+  class="activity-graph"
+  style="--act-base: var(--color-{{ $color }}-50); --act-flash: var(--color-{{ $color }}-400)"
+>
+  <div class="grid grid-cols-26 gap-1.5">
+    {{ range $i := seq 0 (sub $weeks 1) }}
+      {{ $c := $counts.Get (printf "%d" $i) | default 0 }}
+      {{ $shade := "50" }}
+      {{ if gt $c 0 }}
+        {{ $shade = "600" }}
+        {{ if le $c $q1 }}
+          {{ $shade = "300" }}
+        {{ else if le $c $q2 }}
+          {{ $shade = "400" }}
+        {{ else if le $c $q3 }}
+          {{ $shade = "500" }}
+        {{ end }}
+      {{ end }}
+
+      {{/* On-load reveal: a single wipe travels the two-row grid in a
+        serpentine path starting top-right, sweeping left across the top row,
+        dropping down, then sweeping right across the bottom row. Each cell's
+        overlay flashes and fades as the wipe passes, exposing its real value.
+        --d is the cell's turn in that order; see .act-fx in the stylesheet.
+      */}}
+      {{ $cols := 26 }}
+      {{ $row := int (div $i $cols) }}
+      {{ $col := mod $i $cols }}
+      {{ $order := cond (eq $row 0) (sub (sub $cols 1) $col) (add $cols $col) }}
+      {{ $d := mul $order 26 }}
+
+
+      <div class="group relative aspect-square cursor-pointer">
+        <div
+          class="bg-{{ $color }}-{{ $shade }} h-full w-full rounded-sm transition-transform duration-150 group-hover:scale-125"
+        ></div>
+        <div
+          class="act-fx pointer-events-none absolute -inset-px rounded-sm"
+          aria-hidden="true"
+          style="--d: {{ $d }}ms"
+        ></div>
+        <div
+          class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded bg-black px-2 py-1 text-center text-xs whitespace-nowrap text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+        >
+          {{ $c }} {{ cond (eq $c 1) "entry" "entries" }}<br />Week
+          {{ add $i 1 }}
+        </div>
+      </div>
+    {{ end }}
+
+  </div>
+  <div
+    class="mt-2 hidden items-center justify-between text-xs font-light text-slate-400 sm:flex"
+  >
+    <span
+      >Last <strong>52</strong> weeks of
+      <strong>{{ $type }}</strong> activity.</span
+    >
+    <div class="flex items-center gap-1">
+      <span class="mr-0.5">Less</span>
+      <span
+        class="bg-{{ $color }}-50 inline-block h-2 w-2 rounded-xs sm:h-2.5 sm:w-2.5"
+      ></span>
+      <span
+        class="bg-{{ $color }}-300 inline-block h-2 w-2 rounded-xs sm:h-2.5 sm:w-2.5"
+      ></span>
+      <span
+        class="bg-{{ $color }}-400 inline-block h-2 w-2 rounded-xs sm:h-2.5 sm:w-2.5"
+      ></span>
+      <span
+        class="bg-{{ $color }}-500 inline-block h-2 w-2 rounded-xs sm:h-2.5 sm:w-2.5"
+      ></span>
+      <span
+        class="bg-{{ $color }}-600 inline-block h-2 w-2 rounded-xs sm:h-2.5 sm:w-2.5"
+      ></span>
+      <span class="ml-0.5">More</span>
+    </div>
+  </div>
+</section>

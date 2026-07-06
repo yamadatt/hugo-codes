@@ -1,0 +1,43 @@
+{{- /*
+  The command palette's search index: blog posts and bits, each carrying
+  its inlined icon SVG so results render with the same iconography as
+  the rest of the site. Consumed by layouts/partials/palette.html.
+*/ -}}
+{{- $entries := slice -}}
+
+{{- range where site.RegularPages "Section" "blog" -}}
+  {{- $pack := .Params.pack | default "duotone" -}}
+  {{- $dir := cond (eq $pack "brands") "brands" "ui" -}}
+  {{- $svg := "" -}}
+  {{- with resources.Get (printf "icons/%s/%s.svg" $dir (.Params.icon | default "pencil")) -}}
+    {{- $svg = .Content -}}
+  {{- end -}}
+  {{- $entries = $entries | append (dict
+    "title" (.Params.title_safe | default .Title)
+    "url" .RelPermalink
+    "kind" ((.Params.category | default "blog") | lower)
+    "icon" $svg
+    "tags" (.Params.tags | default (slice))
+    "body" (.Plain | htmlUnescape | truncate 500)
+  ) -}}
+{{- end -}}
+
+{{- $meta := partial "bits/meta.html" . -}}
+{{- range where site.RegularPages "Section" "bits" -}}
+  {{- $m := index $meta (.Params.type | default "blurb") -}}
+  {{- $dir := cond (eq $m.pack "brands") "brands" "ui" -}}
+  {{- $svg := "" -}}
+  {{- with resources.Get (printf "icons/%s/%s.svg" $dir $m.icon) -}}
+    {{- $svg = .Content -}}
+  {{- end -}}
+  {{- $entries = $entries | append (dict
+    "title" (.Plain | htmlUnescape | truncate 90)
+    "url" (printf "/bits/#bit-%s" .File.ContentBaseName)
+    "kind" (printf "bit · %s" $m.label)
+    "icon" $svg
+    "tags" (.Params.tags | default (slice))
+    "body" (.Plain | htmlUnescape | truncate 500)
+  ) -}}
+{{- end -}}
+
+{{- $entries | jsonify -}}

@@ -1,0 +1,18 @@
+{{/* A link bit: .Title is the headline, .Params.link the target,
+  .Params.source a domain/site label, and the body optional commentary.
+*/}}
+<a
+  href="{{ .Params.link }}"
+  target="_blank"
+  rel="noopener"
+  class="text-base font-medium text-slate-700 hover:text-slate-900"
+>
+  {{ .Title | safeHTML }}
+  {{ partial "icon.html" (dict "pack" "duotone" "icon" "arrow-up-right" "class" "ml-0.5 text-xs text-slate-400") }}
+</a>
+{{ with .Params.source }}
+  <div class="mt-0.5 font-mono text-xs text-slate-400">{{ . }}</div>
+{{ end }}
+{{ with .Content }}
+  <div class="mt-1 text-sm font-light text-slate-500 [&_p]:m-0">{{ . }}</div>
+{{ end }}

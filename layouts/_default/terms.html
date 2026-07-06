@@ -1,0 +1,28 @@
+{{ define "main" }}
+  <section class="fade-in-animation mx-auto max-w-4xl">
+    <header class="theme-purple">
+      <h1
+        class="text-center text-2xl leading-tight font-bold sm:my-4 md:my-8 md:text-5xl"
+      >
+        The <span class="relative font-normal">Archive</span>.
+      </h1>
+      <p
+        class="mb-10 hidden text-center text-2xl font-extralight text-slate-500 md:block"
+      >
+        Here you will find everything under the sun.<br />Have a nice
+        <i>scroll</i> through memory lane.
+      </p>
+    </header>
+
+    <ul>
+      {{ range $term := .Data.Pages }}
+        <li class="">
+          <a href="{{ $term.RelPermalink }}">
+            {{ .Data.Term }}
+            <span>{{ len $term.Pages }}</span>
+          </a>
+        </li>
+      {{ end }}
+    </ul>
+  </section>
+{{ end }}

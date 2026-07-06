@@ -1,0 +1,19 @@
+{{/* Fetch a GitHub API collection as a slice. */}}
+{{- $url := .url -}}
+{{- $fixture := .fixture -}}
+{{- $data := slice -}}
+{{- $opts := dict -}}
+{{- with os.Getenv "HUGO_GITHUB_TOKEN" -}}
+  {{- $opts = dict "headers" (dict "Authorization" (printf "Bearer %s" .)) -}}
+{{- end -}}
+{{- $remote := try (resources.GetRemote $url $opts) -}}
+{{- with $remote.Value -}}
+  {{- $data = . | transform.Unmarshal -}}
+{{- else -}}
+  {{- with $remote.Err -}}
+    {{- warnf "changelog: live fetch failed for %s (%s); using %s" $url . $fixture -}}
+  {{- end -}}
+  {{- $parsed := try (transform.Unmarshal (os.ReadFile $fixture)) -}}
+  {{- with $parsed.Value -}}{{- $data = . -}}{{- end -}}
+{{- end -}}
+{{- return $data -}}
