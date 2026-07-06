@@ -7,7 +7,7 @@ icon: low-vision
 draft: false
 toc: true
 comments: false
-date: 2026-07-06
+date: 2026-07-04
 category: Go
 tags:
   - go

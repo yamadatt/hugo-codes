@@ -7,7 +7,7 @@ icon: bug
 draft: false
 toc: true
 comments: false
-date: 2026-07-05
+date: 2026-06-27
 category: Go
 tags:
   - go
