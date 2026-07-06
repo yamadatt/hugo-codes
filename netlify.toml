@@ -1,7 +1,7 @@
 [build]
-  command = "node -v && npm -v && hugo version && hugo"
+  command = "npm run build"
   publish = "public"
 
 [build.environment]
   HUGO_VERSION = "0.162.1"
-  NODE_VERSION = "20"
+  NODE_VERSION = "23"
