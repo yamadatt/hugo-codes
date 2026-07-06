@@ -3,7 +3,7 @@ title: Goの <span>Benchmark</span> テストを正確に測定する手法
 title_safe: GoのBenchmarkテストを正確に測定する手法
 highlight: yellow
 pack: duotone
-icon: clock-rotate-left
+icon: stopwatch
 draft: false
 toc: true
 comments: false

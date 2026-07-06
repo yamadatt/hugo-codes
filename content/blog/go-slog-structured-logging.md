@@ -3,7 +3,7 @@ title: Goの標準構造化ロギング <span>slog</span> の使い方
 title_safe: Goの標準構造化ロギングslogの使い方
 highlight: indigo
 pack: duotone
-icon: terminal-window
+icon: terminal
 draft: false
 toc: true
 comments: false

@@ -3,7 +3,7 @@ title: <span>GOGC</span> と <span>GOMEMLIMIT</span> によるGCチューニン�
 title_safe: GOGCとGOMEMLIMITによるGCチューニング
 highlight: green
 pack: duotone
-icon: broom
+icon: gauge
 draft: false
 toc: true
 comments: false

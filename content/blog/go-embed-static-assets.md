@@ -3,7 +3,7 @@ title: <span>go:embed</span> を使った静的アセットのシングルバイ
 title_safe: go:embedを使った静的アセットのシングルバイナリ化
 highlight: orange
 pack: duotone
-icon: cube
+icon: box-open
 draft: false
 toc: true
 comments: false

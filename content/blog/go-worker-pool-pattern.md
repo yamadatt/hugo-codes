@@ -3,7 +3,7 @@ title: <span>Worker Pool</span> パターンによるゴルーチン制限と流
 title_safe: Worker Poolパターンによるゴルーチン制限と流量制御
 highlight: emerald
 pack: duotone
-icon: math-operations
+icon: users-gear
 draft: false
 toc: true
 comments: false

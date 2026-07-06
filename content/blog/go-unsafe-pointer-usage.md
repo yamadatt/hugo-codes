@@ -3,7 +3,7 @@ title: <span>unsafe.Pointer</span> による極限のメモリ操作と注意点
 title_safe: unsafe.Pointerによる極限のメモリ操作と注意点
 highlight: red
 pack: duotone
-icon: exclamation
+icon: triangle-exclamation
 draft: false
 toc: true
 comments: false

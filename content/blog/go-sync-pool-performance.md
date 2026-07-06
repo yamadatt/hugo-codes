@@ -3,7 +3,7 @@ title: Goの <span>sync.Pool</span> によるメモリ割り当て削減とGC負
 title_safe: Goのsync.Poolによるメモリ割り当て削減とGC負荷軽減
 highlight: rose
 pack: duotone
-icon: fire
+icon: bolt
 draft: false
 toc: true
 comments: false

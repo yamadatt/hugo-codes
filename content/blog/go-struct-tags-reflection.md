@@ -3,7 +3,7 @@ title: Goの構造体タグと <span>reflection</span> の仕組み
 title_safe: Goの構造体タグとreflectionの仕組み
 highlight: amber
 pack: duotone
-icon: hash-straight
+icon: tags
 draft: false
 toc: true
 comments: false

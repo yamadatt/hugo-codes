@@ -3,7 +3,7 @@ title: <span>context.Value</span> の正しい使い所とアンチパターン
 title_safe: context.Valueの正しい使い所とアンチパターン
 highlight: indigo
 pack: duotone
-icon: code-pull-request
+icon: share-nodes
 draft: false
 toc: true
 comments: false
